@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2b5fd9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Vocabulaire — révision</title>
+<style>
+:root{
+  --bg:#f5f6fb; --card:#ffffff; --ink:#1c2230; --mute:#667085; --line:#e1e5ee;
+  --accent:#2b5fd9; --accent-ink:#ffffff; --accent-soft:#e8eefc;
+  --again:#d64545; --hard:#c97a12; --good:#2a9560; --easy:#2b7fd9;
+  --warn-bg:#fff4d6; --warn-ink:#6b4a00; --radius:16px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#11141b; --card:#1a1f2d; --ink:#eef1f8; --mute:#9aa4b8; --line:#2a3146;
+    --accent:#7a9dff; --accent-ink:#0d1220; --accent-soft:#222a44;
+    --again:#ef6a6a; --hard:#e8a04a; --good:#4cc088; --easy:#6aa8f5;
+    --warn-bg:#3a2f12; --warn-ink:#ffd98a;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.wrap{max-width:640px;margin:0 auto;padding:0 16px 40px}
+header{padding:18px 0 8px}
+h1{font-size:1.3rem;margin:0}
+nav{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px;margin:10px 0 18px}
+nav button{flex:1;border:0;background:transparent;color:var(--mute);font:inherit;font-weight:600;padding:9px 6px;border-radius:999px;cursor:pointer;position:relative}
+nav button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.badge{display:inline-block;min-width:1.3em;padding:0 6px;margin-left:6px;border-radius:999px;background:var(--again);color:#fff;font-size:.75rem;line-height:1.5}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:14px}
+.panel h2{font-size:1.05rem;margin:0 0 10px}
+.muted{color:var(--mute)}
+.small{font-size:.9rem}
+.stats{display:flex;gap:10px;margin:6px 0 16px}
+.stat{flex:1;background:var(--accent-soft);border-radius:12px;padding:10px 12px;text-align:center}
+.stat b{display:block;font-size:1.6rem;line-height:1.2}
+button.primary{width:100%;border:0;background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:700;padding:14px;border-radius:12px;cursor:pointer}
+button.primary:disabled{opacity:.45;cursor:default}
+button.secondary{border:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;padding:10px 14px;border-radius:10px;cursor:pointer}
+.notice{background:var(--warn-bg);color:var(--warn-ink);border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:.95rem}
+.progress{height:6px;background:var(--line);border-radius:99px;overflow:hidden;margin-bottom:6px}
+.progress i{display:block;height:100%;background:var(--accent);width:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px 18px;text-align:center;margin:12px 0}
+.label{color:var(--mute);font-size:.85rem;text-transform:uppercase;letter-spacing:.06em;margin:0 0 12px}
+.bigspeak{width:92px;height:92px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);font-size:2.4rem;cursor:pointer;margin:6px 0 10px}
+.speak{border:1px solid var(--line);background:var(--accent-soft);border-radius:50%;width:38px;height:38px;cursor:pointer;font-size:1.05rem;flex:none}
+.word{font-size:2rem;font-weight:700;margin:4px 0}
+.def{font-size:1.15rem;margin:6px 0}
+.sep{border:0;border-top:1px dashed var(--line);margin:18px 0}
+.examples{list-style:none;padding:0;margin:10px 0 0;text-align:left}
+.examples li{display:flex;gap:10px;align-items:center;padding:6px 0}
+.example-one{display:flex;gap:10px;align-items:center;text-align:left;margin-top:12px}
+.rates{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+.rates button{border:0;border-radius:12px;padding:10px 4px;font:inherit;font-weight:700;color:#fff;cursor:pointer;line-height:1.25}
+.rates small{display:block;font-weight:500;opacity:.92;font-size:.75rem}
+.r0{background:var(--again)}.r1{background:var(--hard)}.r2{background:var(--good)}.r3{background:var(--easy)}
+details{border:1px solid var(--line);border-radius:12px;margin-bottom:12px;background:var(--card)}
+summary{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-weight:700;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary .count{margin-left:auto;font-weight:500;color:var(--mute);font-size:.9rem}
+.row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-top:1px solid var(--line)}
+.row label{flex:1;display:flex;gap:10px;align-items:center;cursor:pointer;min-width:0}
+.row .t{display:flex;flex-direction:column;min-width:0}
+.row .t span:first-child{font-weight:600}
+.chip{font-size:.75rem;padding:1px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent);align-self:flex-start;margin-top:2px}
+.chip.new{background:var(--again);color:#fff}
+input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)}
+.field{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.field:first-of-type{border-top:0}
+.field input[type=number],.field select{font:inherit;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);max-width:55%}
+.field input[type=number]{width:5.5em}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+[hidden]{display:none !important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><h1 id="title">Vocabulaire</h1></header>
+  <nav role="tablist" aria-label="Sections">
+    <button role="tab" id="tab-review" aria-selected="true">Réviser</button>
+    <button role="tab" id="tab-cards" aria-selected="false">Cartes<span id="badge" class="badge" hidden></span></button>
+    <button role="tab" id="tab-settings" aria-selected="false">Réglages</button>
+  </nav>
+  <div id="warn"></div>
+  <main>
+    <section id="view-review"></section>
+    <section id="view-cards" hidden></section>
+    <section id="view-settings" hidden></section>
+  </main>
+</div>
+
+<script src="cartes.js"></script>
+<script>
+/* ===================================================================
+ *  1) Logique pure (planification des révisions) — testable sans écran
+ * =================================================================== */
+(function (root) {
+  'use strict';
+  var DAY = 86400000;
+
+  function dayNumber(d) {
+    d = d || new Date();
+    return Math.floor((d.getTime() - d.getTimezoneOffset() * 60000) / DAY);
+  }
+  function clampEF(x) { return Math.min(3.0, Math.max(1.3, x)); }
+
+  // q : 0 = Encore, 1 = Difficile, 2 = Bien, 3 = Facile
+  // Variante simplifiée de SM-2 (l'algorithme historique d'Anki), intervalles en jours.
+  function schedule(prev, q, today) {
+    var s = Object.assign({ reps: 0, ef: 2.5, ivl: 0, lapses: 0, due: today }, prev || {});
+    if (q === 0) {
+      if (s.reps > 0) s.lapses++;
+      s.reps = 0; s.ef = clampEF(s.ef - 0.2); s.ivl = 0; s.due = today;
+      return s;
+    }
+    var ivl;
+    if (s.reps === 0)      ivl = (q === 3) ? 4 : 1;
+    else if (s.reps === 1) ivl = (q === 1) ? 2 : (q === 2) ? 3 : 7;
+    else {
+      var f = (q === 1) ? 1.2 : (q === 2) ? s.ef : s.ef * 1.3;
+      ivl = Math.max(Math.round(s.ivl * f), s.ivl + 1);
+    }
+    if (q === 1) s.ef = clampEF(s.ef - 0.15);
+    if (q === 3) s.ef = clampEF(s.ef + 0.15);
+    s.reps++; s.ivl = ivl; s.due = today + ivl;
+    return s;
+  }
+
+  function labelInterval(days) {
+    if (days < 1) return 'bientôt';
+    if (days === 1) return '1 jour';
+    if (days < 30) return days + ' jours';
+    if (days < 365) return Math.round(days / 30) + ' mois';
+    return (Math.round(days / 36.5) / 10).toString().replace('.', ',') + ' an';
+  }
+
+  function shuffle(a) {
+    a = a.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  root.Core = { dayNumber: dayNumber, schedule: schedule, labelInterval: labelInterval, shuffle: shuffle };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+/* ===================================================================
+ *  2) Application
+ * =================================================================== */
+(function () {
+  'use strict';
+  if (typeof document === 'undefined') return;
+
+  var Core = window.Core;
+  var PAQUET = window.PAQUET || { id: 'paquet', titre: 'Vocabulaire', version: 0, cartes: [] };
+  var KEY = 'flashcards.' + (PAQUET.id || 'paquet') + '.v1';
+  var byId = {};
+  PAQUET.cartes.forEach(function (c) { byId[c.id] = c; });
+  var allIds = PAQUET.cartes.map(function (c) { return c.id; });
+
+  var storageOK = true;
+  function defaults() {
+    return {
+      selected: {}, cards: {}, known: [],
+      settings: { newPerDay: 10, rate: 0.9, voice: '', autoplay: true },
+      newToday: { day: 0, count: 0 }
+    };
+  }
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) {
+        var o = JSON.parse(raw), d = defaults();
+        return Object.assign(d, o, { settings: Object.assign(d.settings, o.settings || {}) });
+      }
+    } catch (e) { storageOK = false; }
+    var d2 = defaults();
+    d2.known = allIds.slice();     // premier lancement : rien n'est signalé « nouveau »
+    return d2;
+  }
+  var store = load();
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(store)); }
+    catch (e) { if (storageOK) { storageOK = false; showWarn(); } }
+  }
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+
+  function $(s) { return document.querySelector(s); }
+  function h(tag, attrs) {
+    var e = document.createElement(tag);
+    attrs = attrs || {};
+    Object.keys(attrs).forEach(function (k) {
+      var v = attrs[k];
+      if (k === 'class') e.className = v;
+      else if (k.indexOf('on') === 0) e.addEventListener(k.slice(2), v);
+      else if (v === true) e.setAttribute(k, '');
+      else if (v !== false && v != null) e.setAttribute(k, v);
+    });
+    for (var i = 2; i < arguments.length; i++) {
+      [].concat(arguments[i]).forEach(function (c) { if (c != null && c !== false) e.append(c); });
+    }
+    return e;
+  }
+
+  function showWarn() {
+    var w = $('#warn');
+    w.replaceChildren();
+    if (!storageOK) w.append(h('div', { class: 'notice' },
+      "Ton navigateur ne permet pas d'enregistrer ta progression (navigation privée ?). Ouvre cette page dans un onglet normal."));
+  }
+
+  /* ---------------- Synthèse vocale ---------------- */
+  var voices = [], currentAudio = null;
+  function refreshVoices() {
+    if (!('speechSynthesis' in window)) return;
+    voices = speechSynthesis.getVoices().filter(function (v) { return /^fr/i.test(v.lang); });
+  }
+  if ('speechSynthesis' in window) {
+    refreshVoices();
+    speechSynthesis.onvoiceschanged = function () { refreshVoices(); if (!$('#view-settings').hidden) renderSettings(); };
+  }
+  function pickVoice() {
+    if (store.settings.voice) {
+      var v = voices.find(function (x) { return x.voiceURI === store.settings.voice; });
+      if (v) return v;
+    }
+    return voices.find(function (x) { return /fr[-_]FR/i.test(x.lang); }) || voices[0] || null;
+  }
+  function speak(text, audioUrl) {
+    try {
+      if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+      if (audioUrl) { currentAudio = new Audio(audioUrl); currentAudio.play().catch(function () {}); return; }
+      if (!('speechSynthesis' in window)) return;
+      speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = 'fr-FR';
+      var v = pickVoice(); if (v) u.voice = v;
+      u.rate = Number(store.settings.rate) || 0.9;
+      speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+  function speakBtn(text, audioUrl, cls) {
+    return h('button', { class: cls || 'speak', type: 'button', 'aria-label': 'Écouter', onclick: function (ev) { ev.stopPropagation(); speak(text, audioUrl); } }, '🔊');
+  }
+
+  /* ---------------- Navigation ---------------- */
+  var tabs = ['review', 'cards', 'settings'];
+  function showTab(name) {
+    tabs.forEach(function (t) {
+      $('#tab-' + t).setAttribute('aria-selected', t === name ? 'true' : 'false');
+      $('#view-' + t).hidden = (t !== name);
+    });
+    if (name === 'review') renderReview();
+    if (name === 'cards') renderCards();
+    if (name === 'settings') renderSettings();
+  }
+  tabs.forEach(function (t) { $('#tab-' + t).addEventListener('click', function () { showTab(t); }); });
+
+  function freshIds() { return allIds.filter(function (id) { return store.known.indexOf(id) < 0; }); }
+  function updateBadge() {
+    var n = freshIds().length, b = $('#badge');
+    b.hidden = n === 0; b.textContent = n;
+  }
+
+  /* ---------------- Révision ---------------- */
+  var session = null;
+
+  function selectedIds() { return allIds.filter(function (id) { return store.selected[id]; }); }
+  function counts() {
+    var today = Core.dayNumber(), sel = selectedIds();
+    var due = sel.filter(function (id) { return store.cards[id] && store.cards[id].due <= today; }).length;
+    var pending = sel.filter(function (id) { return !store.cards[id]; }).length;
+    var used = store.newToday.day === today ? store.newToday.count : 0;
+    var allowed = Math.max(0, Number(store.settings.newPerDay) - used);
+    return { sel: sel.length, due: due, fresh: Math.min(pending, allowed), pending: pending };
+  }
+  function pickMode(id) {
+    var c = byId[id];
+    return (c.definition && Math.random() < 0.5) ? 2 : 1;   // 1 = écoute → écrit ; 2 = définition → mot
+  }
+  function startSession() {
+    var today = Core.dayNumber(), sel = selectedIds();
+    var due = sel.filter(function (id) { return store.cards[id] && store.cards[id].due <= today; });
+    var pending = sel.filter(function (id) { return !store.cards[id]; });
+    var used = store.newToday.day === today ? store.newToday.count : 0;
+    var allowed = Math.max(0, Number(store.settings.newPerDay) - used);
+    var ids = Core.shuffle(due.concat(pending.slice(0, allowed)));
+    session = {
+      queue: ids.map(function (id) { return { id: id, mode: pickMode(id) }; }),
+      total: ids.length, done: 0, revealed: false
+    };
+    renderReview();
+  }
+
+  function rate(q) {
+    var item = session.queue.shift(), today = Core.dayNumber(), prev = store.cards[item.id];
+    if (!prev) {
+      if (store.newToday.day !== today) store.newToday = { day: today, count: 0 };
+      store.newToday.count++;
+    }
+    store.cards[item.id] = Core.schedule(prev, q, today);
+    if (q === 0) {
+      item.mode = (item.mode === 1 && byId[item.id].definition) ? 2 : 1;   // on change d'angle d'attaque
+      session.queue.splice(Math.min(session.queue.length, 3), 0, item);
+    } else {
+      session.done++;
+    }
+    save();
+    session.revealed = false;
+    renderReview();
+  }
+
+  function renderReview() {
+    var box = $('#view-review');
+    box.replaceChildren();
+    updateBadge();
+    var c = counts(), fresh = freshIds();
+
+    if (!session || (session.queue.length === 0 && session.total === 0)) {
+      if (fresh.length) {
+        box.append(h('div', { class: 'notice' },
+          fresh.length + (fresh.length > 1 ? ' nouvelles cartes ont été ajoutées' : ' nouvelle carte a été ajoutée') + ' par ton professeur. ',
+          h('a', { href: '#', onclick: function (e) { e.preventDefault(); showTab('cards'); } }, 'Voir les cartes')));
+      }
+      box.append(h('div', { class: 'panel' },
+        h('h2', {}, "Aujourd'hui"),
+        h('div', { class: 'stats' },
+          h('div', { class: 'stat' }, h('b', {}, String(c.due)), 'à revoir'),
+          h('div', { class: 'stat' }, h('b', {}, String(c.fresh)), 'nouvelles')),
+        c.sel === 0
+          ? h('p', { class: 'muted' }, "Tu n'as encore choisi aucune carte. Va dans l'onglet « Cartes » pour sélectionner les mots que tu veux mémoriser.")
+          : null,
+        h('button', { class: 'primary', type: 'button', disabled: (c.due + c.fresh) === 0, onclick: startSession },
+          (c.due + c.fresh) === 0 ? (c.sel === 0 ? 'Aucune carte sélectionnée' : "Rien à réviser pour l'instant") : 'Commencer')
+      ));
+      if (c.sel > 0 && c.due + c.fresh === 0) box.append(nextDueNote());
+      return;
+    }
+
+    if (session.queue.length === 0) {
+      session = null;
+      box.append(h('div', { class: 'panel' },
+        h('h2', {}, 'Bravo, c’est terminé pour le moment ! 🎉'),
+        nextDueNote()),
+        h('button', { class: 'primary', type: 'button', onclick: function () { renderReview(); } }, 'Retour'));
+      return;
+    }
+
+    var item = session.queue[0], card = byId[item.id], prev = store.cards[item.id], today = Core.dayNumber();
+    var pct = Math.round(100 * session.done / Math.max(1, session.total));
+    box.append(
+      h('div', { class: 'progress' }, h('i', { style: 'width:' + pct + '%' })),
+      h('div', { class: 'muted small' }, session.done + ' / ' + session.total + ' · reste ' + session.queue.length),
+      cardView(card, item, session.revealed));
+
+    if (!session.revealed) {
+      box.append(h('button', { class: 'primary', type: 'button', onclick: reveal }, 'Afficher la réponse'));
+      if (item.mode === 1 && store.settings.autoplay) speak(card.mot, card.audio);
+    } else {
+      var names = ['Encore', 'Difficile', 'Bien', 'Facile'];
+      var rates = h('div', { class: 'rates' });
+      names.forEach(function (n, q) {
+        var s = Core.schedule(prev, q, today);
+        rates.append(h('button', { class: 'r' + q, type: 'button', onclick: function () { rate(q); } },
+          n, h('small', {}, q === 0 ? 'bientôt' : Core.labelInterval(s.ivl))));
+      });
+      box.append(rates);
+      if (item.mode === 2 && store.settings.autoplay) speak(card.mot, card.audio);
+    }
+  }
+
+  function reveal() { session.revealed = true; renderReview(); }
+
+  function nextDueNote() {
+    var today = Core.dayNumber(), next = Infinity;
+    selectedIds().forEach(function (id) {
+      var s = store.cards[id];
+      if (s && s.due > today && s.due < next) next = s.due;
+    });
+    if (next === Infinity) return h('p', { class: 'muted' }, '');
+    var n = selectedIds().filter(function (id) { return store.cards[id] && store.cards[id].due === next; }).length;
+    var when = next - today === 1 ? 'demain' : 'dans ' + (next - today) + ' jours';
+    return h('p', { class: 'muted' }, 'Prochaine révision ' + when + ' (' + n + (n > 1 ? ' cartes' : ' carte') + ').');
+  }
+
+  function cardView(card, item, revealed) {
+    var el = h('div', { class: 'card' });
+    var ex = card.exemples || [];
+    if (item.mode === 1) {
+      el.append(h('p', { class: 'label' }, 'Écoute le mot'));
+      if (!revealed) {
+        el.append(speakBtn(card.mot, card.audio, 'bigspeak'), h('p', { class: 'muted' }, 'Quel est ce mot ? Que veut-il dire ?'));
+      } else {
+        el.append(h('div', { class: 'word' }, card.mot), speakBtn(card.mot, card.audio),
+          h('hr', { class: 'sep' }),
+          card.definition ? h('p', { class: 'def' }, card.definition) : null,
+          ex.length ? h('ul', { class: 'examples' }, ex.map(function (t) { return h('li', {}, speakBtn(t), h('span', {}, t)); })) : null);
+      }
+    } else {
+      el.append(h('p', { class: 'label' }, 'Quel est le mot ?'), h('p', { class: 'def' }, card.definition));
+      if (revealed) {
+        el.append(h('hr', { class: 'sep' }),
+          h('div', { class: 'word' }, card.mot), speakBtn(card.mot, card.audio),
+          ex[0] ? h('div', { class: 'example-one' }, speakBtn(ex[0]), h('span', {}, ex[0])) : null);
+      }
+    }
+    return el;
+  }
+
+  /* ---------------- Liste des cartes ---------------- */
+  function renderCards() {
+    var box = $('#view-cards');
+    box.replaceChildren();
+    var fresh = freshIds(), freshSet = {};
+    fresh.forEach(function (id) { freshSet[id] = true; });
+    var today = Core.dayNumber();
+
+    box.append(h('p', { class: 'muted small' }, 'Coche les mots que tu veux mémoriser : ils te seront proposés régulièrement.'));
+
+    var groups = [], idx = {};
+    PAQUET.cartes.forEach(function (c) {
+      var g = c.lecon || 'Cartes';
+      if (!(g in idx)) { idx[g] = groups.length; groups.push({ name: g, ids: [] }); }
+      groups[idx[g]].ids.push(c.id);
+    });
+
+    groups.forEach(function (g) {
+      var det = h('details', { open: true });
+      var master = h('input', { type: 'checkbox', 'aria-label': 'Tout sélectionner : ' + g.name });
+      var count = h('span', { class: 'count' });
+      var boxes = [];
+      function refreshHead() {
+        var n = g.ids.filter(function (id) { return store.selected[id]; }).length;
+        count.textContent = n + ' / ' + g.ids.length;
+        master.checked = n === g.ids.length;
+        master.indeterminate = n > 0 && n < g.ids.length;
+      }
+      master.addEventListener('click', function (e) { e.stopPropagation(); });
+      master.addEventListener('change', function () {
+        g.ids.forEach(function (id) { store.selected[id] = master.checked; });
+        boxes.forEach(function (b) { b.checked = master.checked; });
+        save(); refreshHead();
+      });
+      det.append(h('summary', {}, master, h('span', {}, g.name), count));
+      g.ids.forEach(function (id) {
+        var c = byId[id], s = store.cards[id];
+        var cb = h('input', { type: 'checkbox' });
+        cb.checked = !!store.selected[id];
+        cb.addEventListener('change', function () { store.selected[id] = cb.checked; save(); refreshHead(); });
+        boxes.push(cb);
+        var chip = null;
+        if (freshSet[id]) chip = h('span', { class: 'chip new' }, 'Nouveau');
+        else if (s) {
+          var d = s.due - today;
+          chip = h('span', { class: 'chip' }, d <= 0 ? 'À revoir' : (d === 1 ? 'Demain' : 'Dans ' + d + ' j'));
+        }
+        det.append(h('div', { class: 'row' },
+          h('label', {}, cb, h('span', { class: 't' }, h('span', {}, c.mot), chip)),
+          speakBtn(c.mot, c.audio)));
+      });
+      refreshHead();
+      box.append(det);
+    });
+
+    store.known = allIds.slice();   // les nouveautés sont maintenant « vues »
+    save(); updateBadge();
+  }
+
+  /* ---------------- Réglages ---------------- */
+  function renderSettings() {
+    var box = $('#view-settings');
+    box.replaceChildren();
+
+    var newPer = h('input', { type: 'number', min: '0', max: '100', value: String(store.settings.newPerDay) });
+    newPer.addEventListener('change', function () {
+      store.settings.newPerDay = Math.max(0, Math.min(100, parseInt(newPer.value, 10) || 0)); newPer.value = store.settings.newPerDay; save();
+    });
+    var rate = h('input', { type: 'range', min: '0.6', max: '1.1', step: '0.05', value: String(store.settings.rate) });
+    rate.addEventListener('change', function () { store.settings.rate = Number(rate.value); save(); });
+    var auto = h('input', { type: 'checkbox' });
+    auto.checked = !!store.settings.autoplay;
+    auto.addEventListener('change', function () { store.settings.autoplay = auto.checked; save(); });
+
+    var voiceSel = h('select', {});
+    voiceSel.append(h('option', { value: '' }, 'Automatique'));
+    voices.forEach(function (v) { voiceSel.append(h('option', { value: v.voiceURI }, v.name + ' (' + v.lang + ')')); });
+    voiceSel.value = store.settings.voice || '';
+    voiceSel.addEventListener('change', function () { store.settings.voice = voiceSel.value; save(); });
+
+    box.append(h('div', { class: 'panel' },
+      h('h2', {}, 'Révision'),
+      h('div', { class: 'field' }, h('label', {}, 'Nouvelles cartes par jour'), newPer),
+      h('div', { class: 'field' }, h('label', {}, 'Lecture audio automatique'), auto)));
+
+    box.append(h('div', { class: 'panel' },
+      h('h2', {}, 'Voix'),
+      ('speechSynthesis' in window)
+        ? (voices.length ? null : h('div', { class: 'notice' }, "Aucune voix française n'a été trouvée sur cet appareil. Installe-en une dans les réglages d'accessibilité/langue de ton téléphone ou de ton ordinateur."))
+        : h('div', { class: 'notice' }, "Ce navigateur ne sait pas lire le texte à voix haute."),
+      h('div', { class: 'field' }, h('label', {}, 'Voix'), voiceSel),
+      h('div', { class: 'field' }, h('label', {}, 'Vitesse'), rate),
+      h('div', { class: 'btnrow' }, h('button', { class: 'secondary', type: 'button', onclick: function () { speak('Bonjour, voici un exemple de voix.'); } }, '🔊 Tester la voix'))));
+
+    var file = h('input', { type: 'file', accept: 'application/json,.json', hidden: true });
+    file.addEventListener('change', function () {
+      var f = file.files[0]; if (!f) return;
+      var r = new FileReader();
+      r.onload = function () {
+        try {
+          var o = JSON.parse(String(r.result));
+          if (!o || typeof o.cards !== 'object' || typeof o.selected !== 'object') throw new Error('format');
+          if (!confirm('Remplacer ta progression actuelle par celle de la sauvegarde ?')) return;
+          var d = defaults();
+          store = Object.assign(d, o, { settings: Object.assign(d.settings, o.settings || {}) });
+          store.known = Array.from(new Set((store.known || []).concat(freshIds().length ? [] : allIds)));
+          save(); session = null; renderSettings(); alert('Progression restaurée.');
+        } catch (e) { alert("Ce fichier n'est pas une sauvegarde valide."); }
+      };
+      r.readAsText(f);
+    });
+    box.append(h('div', { class: 'panel' },
+      h('h2', {}, 'Sauvegarde de ma progression'),
+      h('p', { class: 'muted small' }, "Ta progression reste sur cet appareil. Pour la conserver en cas de changement de téléphone ou pour la copier sur un autre appareil, exporte-la puis importe-la là-bas."),
+      h('div', { class: 'btnrow' },
+        h('button', { class: 'secondary', type: 'button', onclick: exportData }, '⬇️ Exporter'),
+        h('button', { class: 'secondary', type: 'button', onclick: function () { file.click(); } }, '⬆️ Importer'),
+        h('button', { class: 'secondary', type: 'button', onclick: resetAll }, 'Tout effacer'),
+        file)));
+
+    box.append(h('p', { class: 'muted small' }, 'Paquet : ' + PAQUET.titre + ' · version ' + PAQUET.version + ' · ' + PAQUET.cartes.length + ' cartes'));
+  }
+
+  function exportData() {
+    var blob = new Blob([JSON.stringify(store)], { type: 'application/json' });
+    var a = h('a', { href: URL.createObjectURL(blob), download: 'ma-progression-' + (PAQUET.id || 'paquet') + '.json' });
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+  }
+  function resetAll() {
+    if (!confirm('Effacer toute ta progression et ta sélection de cartes ?')) return;
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    store = defaults(); store.known = allIds.slice(); session = null;
+    renderSettings();
+  }
+
+  /* ---------------- Clavier (ordinateur) ---------------- */
+  document.addEventListener('keydown', function (e) {
+    if ($('#view-review').hidden || !session || !session.queue.length) return;
+    var tag = (e.target && e.target.tagName) || '';
+    if (/INPUT|SELECT|TEXTAREA/.test(tag)) return;
+    if (!session.revealed && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); reveal(); }
+    else if (session.revealed && /^[1-4]$/.test(e.key)) rate(Number(e.key) - 1);
+    else if (e.key === 'r' || e.key === 'R') speak(byId[session.queue[0].id].mot, byId[session.queue[0].id].audio);
+  });
+
+  /* ---------------- Démarrage ---------------- */
+  $('#title').textContent = PAQUET.titre;
+  document.title = PAQUET.titre;
+  showWarn();
+  showTab('review');
+})();
+</script>
+</body>
+</html>
