@@ -81,6 +81,11 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)
 .fresh{color:var(--again)}
 .tri{flex:none;width:0;height:0;margin:0 4px 0 2px;border-left:14px solid var(--accent);border-top:9px solid transparent;border-bottom:9px solid transparent;transition:transform .15s}
 details[open] > summary .tri{transform:rotate(90deg)}
+.blank{display:inline-block;min-width:4.5em;border-bottom:2px solid var(--ink);margin:0 .15em;vertical-align:baseline}
+.cloze-label{color:var(--mute);font-size:.85rem;margin:16px 0 4px}
+.cloze{font-size:1.15rem;font-style:italic;margin:0}
+.cloze-row{display:flex;gap:10px;align-items:center;justify-content:center;text-align:left;margin:12px 0 0;font-size:1.05rem}
+b.hl{color:var(--accent)}
 [hidden]{display:none !important}
 </style>
 </head>
@@ -456,6 +461,35 @@ details[open] > summary .tri{transform:rotate(90deg)}
     return h('p', { class: 'muted' }, 'Prochaine révision ' + when + ' (' + n + (n > 1 ? ' cartes' : ' carte') + ').');
   }
 
+  // Phrases d'exemple : le mot à trouver (ou sa forme fléchie / conjuguée) est écrit entre crochets dans
+  // cartes.js, par exemple « Nous avons [emménagé] en septembre. ». Les crochets ne sont jamais affichés
+  // ni lus à voix haute.
+  function stripBrackets(t) { return t.replace(/\[([^\]]+)\]/g, '$1'); }
+  function clozeIndex(ex) {
+    for (var i = 0; i < ex.length; i++) if (/\[[^\]]+\]/.test(ex[i])) return i;
+    return -1;
+  }
+  // mode 'blank' : le mot entre crochets est remplacé par un blanc ; mode 'fill' : il est mis en valeur
+  function sentence(t, mode) {
+    var out = [], last = 0, m, re = /\[([^\]]+)\]/g;
+    while ((m = re.exec(t)) !== null) {
+      if (m.index > last) out.push(t.slice(last, m.index));
+      out.push(mode === 'blank'
+        ? h('span', { class: 'blank', role: 'img', 'aria-label': 'mot à trouver' }, ' ')
+        : h('b', { class: 'hl' }, m[1]));
+      last = m.index + m[0].length;
+    }
+    if (last < t.length) out.push(t.slice(last));
+    return out;
+  }
+  function exampleList(ex, skip) {
+    var items = ex.filter(function (t, i) { return i !== skip; });
+    if (!items.length) return null;
+    return h('ul', { class: 'examples' }, items.map(function (t) {
+      return h('li', {}, speakBtn(stripBrackets(t)), h('span', {}, sentence(t, 'fill')));
+    }));
+  }
+
   function cardView(card, item, revealed) {
     var el = h('div', { class: 'card' });
     var ex = card.exemples || [];
@@ -473,14 +507,23 @@ details[open] > summary .tri{transform:rotate(90deg)}
         el.append(h('div', { class: 'word' }, card.mot), speakBtn(card.mot, card.audio),
           h('hr', { class: 'sep' }),
           card.definition ? h('p', { class: 'def' }, card.definition) : null,
-          ex.length ? h('ul', { class: 'examples' }, ex.map(function (t) { return h('li', {}, speakBtn(t), h('span', {}, t)); })) : null);
+          exampleList(ex, -1));
       }
     } else {
+      var ci = clozeIndex(ex);          // première phrase contenant un mot entre crochets (-1 : aucune)
       el.append(h('p', { class: 'label' }, 'Quel est le mot ?'), h('p', { class: 'def' }, card.definition));
+      if (ci >= 0) {
+        if (!revealed) {
+          el.append(h('p', { class: 'cloze-label' }, 'Complète la phrase :'),
+            h('p', { class: 'cloze' }, sentence(ex[ci], 'blank')));
+        } else {
+          el.append(h('div', { class: 'cloze-row' }, speakBtn(stripBrackets(ex[ci])), h('span', {}, sentence(ex[ci], 'fill'))));
+        }
+      }
       if (revealed) {
         el.append(h('hr', { class: 'sep' }),
           h('div', { class: 'word' }, card.mot), speakBtn(card.mot, card.audio),
-          ex.length ? h('ul', { class: 'examples' }, ex.map(function (t) { return h('li', {}, speakBtn(t), h('span', {}, t)); })) : null);
+          exampleList(ex, ci));
       }
     }
     return el;
