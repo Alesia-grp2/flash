@@ -78,6 +78,9 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)
 .hintbox{display:inline-flex;gap:8px;align-items:center;cursor:pointer;color:var(--mute);margin-top:6px}
 .toprow{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .toprow .secondary{padding:6px 12px}
+.fresh{color:var(--again)}
+.tri::before{content:"▸";display:inline-block;width:1em;color:var(--mute)}
+details[open] > summary .tri::before{content:"▾"}
 [hidden]{display:none !important}
 </style>
 </head>
@@ -172,7 +175,7 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)
   var storageOK = true;
   function defaults() {
     return {
-      selected: {}, cards: {}, known: [],
+      selected: {}, cards: {}, known: [], highlight: [], highlightSeen: true, collapsed: {},
       settings: { newPerDay: 10, rate: 0.9, voice: '', autoplay: true, tracking: 'single' },
       newToday: { day: 0, count: 0 }
     };
@@ -267,9 +270,20 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)
   }
   tabs.forEach(function (t) { $('#tab-' + t).addEventListener('click', function () { showTab(t); }); });
 
-  function freshIds() { return allIds.filter(function (id) { return store.known.indexOf(id) < 0; }); }
+  // Nouveautés : à chaque ajout de cartes par le professeur, elles (et leur leçon) passent en rouge
+  // et le restent jusqu'au prochain ajout. Le badge, lui, disparaît dès que l'élève a ouvert « Cartes ».
+  function syncNew() {
+    var fresh = allIds.filter(function (id) { return store.known.indexOf(id) < 0; });
+    if (fresh.length) {
+      store.highlight = fresh;
+      store.highlightSeen = false;
+      store.known = store.known.concat(fresh);
+    }
+  }
+  function highlightIds() { return (store.highlight || []).filter(function (id) { return byId[id]; }); }
+  function unseenCount() { return store.highlightSeen ? 0 : highlightIds().length; }
   function updateBadge() {
-    var n = freshIds().length, b = $('#badge');
+    var n = unseenCount(), b = $('#badge');
     b.hidden = n === 0; b.textContent = n;
   }
 
@@ -365,7 +379,7 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)
     var box = $('#view-review');
     box.replaceChildren();
     updateBadge();
-    var c = counts(), fresh = freshIds();
+    var c = counts(), fresh = store.highlightSeen ? [] : highlightIds();
 
     if (!session || (session.queue.length === 0 && session.total === 0)) {
       if (fresh.length) {
@@ -476,11 +490,9 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)
   function renderCards() {
     var box = $('#view-cards');
     box.replaceChildren();
-    var fresh = freshIds(), freshSet = {};
-    fresh.forEach(function (id) { freshSet[id] = true; });
+    var hl = {};
+    highlightIds().forEach(function (id) { hl[id] = true; });
     var today = Core.dayNumber();
-
-    box.append(h('p', { class: 'muted small' }, 'Coche les mots que tu veux mémoriser : ils te seront proposés régulièrement.'));
 
     var groups = [], idx = {};
     PAQUET.cartes.forEach(function (c) {
@@ -489,24 +501,45 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)
       groups[idx[g]].ids.push(c.id);
     });
 
+    var dets = [];
+    var collapseAll = h('input', { type: 'checkbox' });
+    function syncCollapseAll() {
+      collapseAll.checked = dets.length > 0 && dets.every(function (x) { return !x.det.open; });
+    }
+    function remember(name, open) {
+      if (open) delete store.collapsed[name]; else store.collapsed[name] = true;
+    }
+    collapseAll.addEventListener('change', function () {
+      dets.forEach(function (x) { x.det.open = !collapseAll.checked; remember(x.name, x.det.open); });
+      save();
+    });
+    box.append(
+      h('p', { class: 'muted small' }, 'Coche les mots que tu veux mémoriser : ils te seront proposés régulièrement.'),
+      h('label', { class: 'hintbox small' }, collapseAll, 'Tout réduire'));
+
     groups.forEach(function (g) {
-      var det = h('details', { open: true });
-      var master = h('input', { type: 'checkbox', 'aria-label': 'Tout sélectionner : ' + g.name });
+      var det = h('details', {});
+      det.open = !store.collapsed[g.name];
+      var lessonCb = h('input', { type: 'checkbox', 'aria-label': 'Tout sélectionner : ' + g.name });
       var count = h('span', { class: 'count' });
       var boxes = [];
+      var lessonIsNew = g.ids.some(function (id) { return hl[id]; });
       function refreshHead() {
         var n = g.ids.filter(function (id) { return store.selected[id]; }).length;
         count.textContent = n + ' / ' + g.ids.length;
-        master.checked = n === g.ids.length;
-        master.indeterminate = n > 0 && n < g.ids.length;
+        lessonCb.checked = n === g.ids.length;
+        lessonCb.indeterminate = n > 0 && n < g.ids.length;
       }
-      master.addEventListener('click', function (e) { e.stopPropagation(); });
-      master.addEventListener('change', function () {
-        g.ids.forEach(function (id) { store.selected[id] = master.checked; });
-        boxes.forEach(function (b) { b.checked = master.checked; });
+      lessonCb.addEventListener('click', function (e) { e.stopPropagation(); });
+      lessonCb.addEventListener('change', function () {
+        g.ids.forEach(function (id) { store.selected[id] = lessonCb.checked; });
+        boxes.forEach(function (b) { b.checked = lessonCb.checked; });
         save(); refreshHead();
       });
-      det.append(h('summary', {}, master, h('span', {}, g.name), count));
+      det.addEventListener('toggle', function () { remember(g.name, det.open); save(); syncCollapseAll(); });
+      det.append(h('summary', {},
+        h('span', { class: 'tri', 'aria-hidden': 'true' }), lessonCb,
+        h('span', { class: lessonIsNew ? 'fresh' : '' }, g.name), count));
       g.ids.forEach(function (id) {
         var c = byId[id], s = unitState(id);
         var cb = h('input', { type: 'checkbox' });
@@ -514,20 +547,22 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)
         cb.addEventListener('change', function () { store.selected[id] = cb.checked; save(); refreshHead(); });
         boxes.push(cb);
         var chip = null;
-        if (freshSet[id]) chip = h('span', { class: 'chip new' }, 'Nouveau');
+        if (hl[id]) chip = h('span', { class: 'chip new' }, 'Nouveau');
         else if (s) {
           var d = s.due - today;
           chip = h('span', { class: 'chip' }, d <= 0 ? 'À revoir' : (d === 1 ? 'Demain' : 'Dans ' + d + ' j'));
         }
         det.append(h('div', { class: 'row' },
-          h('label', {}, cb, h('span', { class: 't' }, h('span', {}, c.mot), chip)),
+          h('label', {}, cb, h('span', { class: 't' }, h('span', { class: hl[id] ? 'fresh' : '' }, c.mot), chip)),
           speakBtn(c.mot, c.audio)));
       });
       refreshHead();
+      dets.push({ det: det, name: g.name });
       box.append(det);
     });
 
-    store.known = allIds.slice();   // les nouveautés sont maintenant « vues »
+    syncCollapseAll();
+    store.highlightSeen = true;     // le badge disparaît ; le rouge, lui, reste jusqu'au prochain ajout
     save(); updateBadge();
   }
 
@@ -585,7 +620,8 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)
           if (!confirm('Remplacer ta progression actuelle par celle de la sauvegarde ?')) return;
           var d = defaults();
           store = Object.assign(d, o, { settings: Object.assign(d.settings, o.settings || {}) });
-          store.known = Array.from(new Set((store.known || []).concat(freshIds().length ? [] : allIds)));
+          if (!Array.isArray(store.known) || !store.known.length) store.known = allIds.slice();
+          syncNew();
           save(); session = null; renderSettings(); alert('Progression restaurée.');
         } catch (e) { alert("Ce fichier n'est pas une sauvegarde valide."); }
       };
@@ -664,6 +700,8 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)
   /* ---------------- Démarrage ---------------- */
   $('#title').textContent = PAQUET.titre;
   document.title = PAQUET.titre;
+  syncNew();
+  save();
   showWarn();
   showTab('review');
 })();
