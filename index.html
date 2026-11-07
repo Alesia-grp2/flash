@@ -76,6 +76,8 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)
 .field input[type=number]{width:5.5em}
 .btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
 .hintbox{display:inline-flex;gap:8px;align-items:center;cursor:pointer;color:var(--mute);margin-top:6px}
+.toprow{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.toprow .secondary{padding:6px 12px}
 [hidden]{display:none !important}
 </style>
 </head>
@@ -371,6 +373,7 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)
           fresh.length + (fresh.length > 1 ? ' nouvelles cartes ont été ajoutées' : ' nouvelle carte a été ajoutée') + ' par ton professeur. ',
           h('a', { href: '#', onclick: function (e) { e.preventDefault(); showTab('cards'); } }, 'Voir les cartes')));
       }
+      if (stopped) { box.append(h('div', { class: 'notice' }, 'Séance terminée. Ta progression est enregistrée ; les cartes non faites te seront reproposées.')); stopped = false; }
       box.append(h('div', { class: 'panel' },
         h('h2', {}, "Aujourd'hui"),
         h('div', { class: 'stats' },
@@ -399,7 +402,9 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)
     var pct = Math.round(100 * session.done / Math.max(1, session.total));
     box.append(
       h('div', { class: 'progress' }, h('i', { style: 'width:' + pct + '%' })),
-      h('div', { class: 'muted small' }, session.done + ' / ' + session.total + ' · reste ' + session.queue.length),
+      h('div', { class: 'toprow' },
+        h('span', { class: 'muted small' }, session.done + ' / ' + session.total + ' · reste ' + session.queue.length),
+        h('button', { class: 'secondary small', type: 'button', onclick: stopSession }, 'Terminer')),
       cardView(card, item, session.revealed));
 
     if (!session.revealed) {
@@ -419,6 +424,14 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)
   }
 
   function reveal() { session.revealed = true; renderReview(); }
+
+  var stopped = false;
+  function stopSession() {
+    try { if ('speechSynthesis' in window) speechSynthesis.cancel(); if (currentAudio) currentAudio.pause(); } catch (e) {}
+    session = null;
+    stopped = true;      // la progression est déjà enregistrée carte après carte
+    renderReview();
+  }
 
   function nextDueNote() {
     var today = Core.dayNumber(), next = Infinity, states = allUnitStates();
@@ -644,6 +657,7 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)
     if (/INPUT|SELECT|TEXTAREA/.test(tag)) return;
     if (!session.revealed && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); reveal(); }
     else if (session.revealed && /^[1-4]$/.test(e.key)) rate(Number(e.key) - 1);
+    else if (e.key === 'Escape') stopSession();
     else if (e.key === 'r' || e.key === 'R') speak(byId[session.queue[0].id].mot, byId[session.queue[0].id].audio);
   });
 
