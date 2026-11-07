@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#2b5fd9">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Vocabulaire — révision</title>
+<meta name="apple-mobile-web-app-title" content="Vocalésia">
+<title>Vocalésia</title>
 <style>
 :root{
   --bg:#f5f6fb; --card:#ffffff; --ink:#1c2230; --mute:#667085; --line:#e1e5ee;
@@ -86,12 +87,19 @@ details[open] > summary .tri{transform:rotate(90deg)}
 .cloze{font-size:1.15rem;font-style:italic;margin:0}
 .cloze-row{display:flex;gap:10px;align-items:center;justify-content:center;text-align:left;margin:12px 0 0;font-size:1.05rem}
 b.hl{color:var(--accent)}
+.banner{background:var(--accent-soft);border-radius:var(--radius);padding:14px 18px;margin:16px 0 4px}
+.brand{margin:0;font-size:2.25rem;line-height:1.1;font-weight:300;color:var(--ink)}
+.brand .b1{display:inline-block;font-weight:700;line-height:1;padding-bottom:3px;border-bottom:4px solid var(--accent)}
+.tagline{margin:4px 0 0;font-size:.85rem;color:var(--mute)}
 [hidden]{display:none !important}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header><h1 id="title">Vocabulaire</h1></header>
+  <header class="banner">
+    <h1 class="brand" aria-label="Vocalésia"><span class="b1" aria-hidden="true">Voc</span><span aria-hidden="true">alésia</span></h1>
+    <p id="title" class="tagline">Vocabulaire</p>
+  </header>
   <nav role="tablist" aria-label="Sections">
     <button role="tab" id="tab-review" aria-selected="true">Réviser</button>
     <button role="tab" id="tab-cards" aria-selected="false">Cartes<span id="badge" class="badge" hidden></span></button>
@@ -742,7 +750,7 @@ b.hl{color:var(--accent)}
 
   /* ---------------- Démarrage ---------------- */
   $('#title').textContent = PAQUET.titre;
-  document.title = PAQUET.titre;
+  document.title = 'Vocalésia';
   syncNew();
   save();
   showWarn();
