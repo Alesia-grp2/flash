@@ -75,6 +75,7 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)
 .field input[type=number],.field select{font:inherit;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);max-width:55%}
 .field input[type=number]{width:5.5em}
 .btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.hintbox{display:inline-flex;gap:8px;align-items:center;cursor:pointer;color:var(--mute);margin-top:6px}
 [hidden]{display:none !important}
 </style>
 </head>
@@ -113,6 +114,7 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)
   // Variante simplifiée de SM-2 (l'algorithme historique d'Anki), intervalles en jours.
   function schedule(prev, q, today) {
     var s = Object.assign({ reps: 0, ef: 2.5, ivl: 0, lapses: 0, due: today }, prev || {});
+    delete s.ph;
     if (q === 0) {
       if (s.reps > 0) s.lapses++;
       s.reps = 0; s.ef = clampEF(s.ef - 0.2); s.ivl = 0; s.due = today;
@@ -169,7 +171,7 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)
   function defaults() {
     return {
       selected: {}, cards: {}, known: [],
-      settings: { newPerDay: 10, rate: 0.9, voice: '', autoplay: true },
+      settings: { newPerDay: 10, rate: 0.9, voice: '', autoplay: true, tracking: 'single' },
       newToday: { day: 0, count: 0 }
     };
   }
@@ -273,47 +275,87 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)
   var session = null;
 
   function selectedIds() { return allIds.filter(function (id) { return store.selected[id]; }); }
-  function counts() {
-    var today = Core.dayNumber(), sel = selectedIds();
-    var due = sel.filter(function (id) { return store.cards[id] && store.cards[id].due <= today; }).length;
-    var pending = sel.filter(function (id) { return !store.cards[id]; }).length;
-    var used = store.newToday.day === today ? store.newToday.count : 0;
-    var allowed = Math.max(0, Number(store.settings.newPerDay) - used);
-    return { sel: sel.length, due: due, fresh: Math.min(pending, allowed), pending: pending };
+  function separate() { return store.settings.tracking === 'separate'; }
+  // Une « unité » = ce qui est planifié : le mot (suivi unique) ou le couple mot + type d'exercice (suivi séparé).
+  function unitsFor(id) { return separate() ? [id + '|1', id + '|2'] : [id]; }
+  function hasMode(id, mode) { return mode === 1 || !!(byId[id] && byId[id].definition); }
+  function unitState(id) {   // état le plus prudent d'un mot (pour l'affichage)
+    var best = null;
+    unitsFor(id).forEach(function (k) {
+      var s = store.cards[k];
+      if (s && (!best || s.due < best.due)) best = s;
+    });
+    return best;
+  }
+  function allUnitStates() {
+    var out = [];
+    selectedIds().forEach(function (id) {
+      unitsFor(id).forEach(function (k) { if (store.cards[k]) out.push(store.cards[k]); });
+    });
+    return out;
   }
   function pickMode(id) {
-    var c = byId[id];
-    return (c.definition && Math.random() < 0.5) ? 2 : 1;   // 1 = écoute → écrit ; 2 = définition → mot
+    return (hasMode(id, 2) && Math.random() < 0.5) ? 2 : 1;   // 1 = écoute → écrit ; 2 = définition → mot
+  }
+  function dueItems(today) {
+    var out = [];
+    selectedIds().forEach(function (id) {
+      unitsFor(id).forEach(function (k) {
+        var s = store.cards[k];
+        if (!s || s.due > today) return;
+        var mode = separate() ? Number(k.split('|')[1]) : pickMode(id);
+        if (hasMode(id, mode)) out.push({ id: id, key: k, mode: mode });
+      });
+    });
+    return out;
+  }
+  function newWordIds() {
+    return selectedIds().filter(function (id) { return !unitsFor(id).some(function (k) { return store.cards[k]; }); });
+  }
+  function newAllowed(today) {
+    var used = store.newToday.day === today ? store.newToday.count : 0;
+    return Math.max(0, Number(store.settings.newPerDay) - used);
+  }
+  function counts() {
+    var today = Core.dayNumber();
+    return { sel: selectedIds().length, due: dueItems(today).length, fresh: Math.min(newWordIds().length, newAllowed(today)) };
   }
   function startSession() {
-    var today = Core.dayNumber(), sel = selectedIds();
-    var due = sel.filter(function (id) { return store.cards[id] && store.cards[id].due <= today; });
-    var pending = sel.filter(function (id) { return !store.cards[id]; });
-    var used = store.newToday.day === today ? store.newToday.count : 0;
-    var allowed = Math.max(0, Number(store.settings.newPerDay) - used);
-    var ids = Core.shuffle(due.concat(pending.slice(0, allowed)));
-    session = {
-      queue: ids.map(function (id) { return { id: id, mode: pickMode(id) }; }),
-      total: ids.length, done: 0, revealed: false
-    };
+    var today = Core.dayNumber();
+    var items = dueItems(today);
+    newWordIds().slice(0, newAllowed(today)).forEach(function (id) {
+      var m = pickMode(id);
+      items.push({ id: id, mode: m, key: separate() ? id + '|' + m : id });
+    });
+    items = Core.shuffle(items);
+    session = { queue: items, total: items.length, done: 0, revealed: false, hint: false };
     renderReview();
   }
 
   function rate(q) {
-    var item = session.queue.shift(), today = Core.dayNumber(), prev = store.cards[item.id];
-    if (!prev) {
+    var item = session.queue.shift(), today = Core.dayNumber(), prev = store.cards[item.key];
+    var isNew = !unitsFor(item.id).some(function (k) { return store.cards[k]; });
+    if (isNew) {
       if (store.newToday.day !== today) store.newToday = { day: today, count: 0 };
       store.newToday.count++;
     }
-    store.cards[item.id] = Core.schedule(prev, q, today);
+    store.cards[item.key] = Core.schedule(prev, q, today);
+    if (separate()) {
+      // l'autre type d'exercice sera proposé dès le lendemain
+      var otherMode = item.mode === 1 ? 2 : 1, other = item.id + '|' + otherMode;
+      if (hasMode(item.id, otherMode) && !store.cards[other]) {
+        store.cards[other] = { reps: 0, ef: 2.5, ivl: 0, lapses: 0, due: today + 1, ph: true };
+      }
+    }
     if (q === 0) {
-      item.mode = (item.mode === 1 && byId[item.id].definition) ? 2 : 1;   // on change d'angle d'attaque
+      if (!separate()) item.mode = (item.mode === 1 && hasMode(item.id, 2)) ? 2 : 1;   // on change d'angle d'attaque
       session.queue.splice(Math.min(session.queue.length, 3), 0, item);
     } else {
       session.done++;
     }
     save();
     session.revealed = false;
+    session.hint = false;
     renderReview();
   }
 
@@ -353,7 +395,7 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)
       return;
     }
 
-    var item = session.queue[0], card = byId[item.id], prev = store.cards[item.id], today = Core.dayNumber();
+    var item = session.queue[0], card = byId[item.id], prev = store.cards[item.key], today = Core.dayNumber();
     var pct = Math.round(100 * session.done / Math.max(1, session.total));
     box.append(
       h('div', { class: 'progress' }, h('i', { style: 'width:' + pct + '%' })),
@@ -379,13 +421,10 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)
   function reveal() { session.revealed = true; renderReview(); }
 
   function nextDueNote() {
-    var today = Core.dayNumber(), next = Infinity;
-    selectedIds().forEach(function (id) {
-      var s = store.cards[id];
-      if (s && s.due > today && s.due < next) next = s.due;
-    });
+    var today = Core.dayNumber(), next = Infinity, states = allUnitStates();
+    states.forEach(function (s) { if (s.due > today && s.due < next) next = s.due; });
     if (next === Infinity) return h('p', { class: 'muted' }, '');
-    var n = selectedIds().filter(function (id) { return store.cards[id] && store.cards[id].due === next; }).length;
+    var n = states.filter(function (s) { return s.due === next; }).length;
     var when = next - today === 1 ? 'demain' : 'dans ' + (next - today) + ' jours';
     return h('p', { class: 'muted' }, 'Prochaine révision ' + when + ' (' + n + (n > 1 ? ' cartes' : ' carte') + ').');
   }
@@ -396,7 +435,13 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)
     if (item.mode === 1) {
       el.append(h('p', { class: 'label' }, 'Écoute le mot'));
       if (!revealed) {
-        el.append(speakBtn(card.mot, card.audio, 'bigspeak'), h('p', { class: 'muted' }, 'Quel est ce mot ? Que veut-il dire ?'));
+        var hintWord = h('div', { class: 'word', id: 'hintword', hidden: !session.hint }, card.mot);
+        var cb = h('input', { type: 'checkbox', id: 'hint' });
+        cb.checked = !!session.hint;
+        cb.addEventListener('change', function () { session.hint = cb.checked; hintWord.hidden = !cb.checked; });
+        el.append(speakBtn(card.mot, card.audio, 'bigspeak'), hintWord,
+          h('p', { class: 'muted' }, 'Quel est ce mot ? Que veut-il dire ?'),
+          h('label', { class: 'hintbox small' }, cb, "Je n'ai pas bien compris le mot : afficher l'écrit"));
       } else {
         el.append(h('div', { class: 'word' }, card.mot), speakBtn(card.mot, card.audio),
           h('hr', { class: 'sep' }),
@@ -450,7 +495,7 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)
       });
       det.append(h('summary', {}, master, h('span', {}, g.name), count));
       g.ids.forEach(function (id) {
-        var c = byId[id], s = store.cards[id];
+        var c = byId[id], s = unitState(id);
         var cb = h('input', { type: 'checkbox' });
         cb.checked = !!store.selected[id];
         cb.addEventListener('change', function () { store.selected[id] = cb.checked; save(); refreshHead(); });
@@ -488,6 +533,12 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)
     auto.checked = !!store.settings.autoplay;
     auto.addEventListener('change', function () { store.settings.autoplay = auto.checked; save(); });
 
+    var trk = h('select', {},
+      h('option', { value: 'single' }, 'Un seul suivi par mot'),
+      h('option', { value: 'separate' }, "Suivi séparé par type d'exercice"));
+    trk.value = store.settings.tracking === 'separate' ? 'separate' : 'single';
+    trk.addEventListener('change', function () { changeTracking(trk.value, trk); });
+
     var voiceSel = h('select', {});
     voiceSel.append(h('option', { value: '' }, 'Automatique'));
     voices.forEach(function (v) { voiceSel.append(h('option', { value: v.voiceURI }, v.name + ' (' + v.lang + ')')); });
@@ -497,7 +548,9 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)
     box.append(h('div', { class: 'panel' },
       h('h2', {}, 'Révision'),
       h('div', { class: 'field' }, h('label', {}, 'Nouvelles cartes par jour'), newPer),
-      h('div', { class: 'field' }, h('label', {}, 'Lecture audio automatique'), auto)));
+      h('div', { class: 'field' }, h('label', {}, 'Lecture audio automatique'), auto),
+      h('div', { class: 'field' }, h('label', {}, 'Suivi des cartes'), trk),
+      h('p', { class: 'muted small' }, "Un seul suivi : un mot = une révision, quel que soit l'exercice. Suivi séparé : l'écoute et la définition sont planifiées chacune de leur côté (environ deux fois plus de révisions).")));
 
     box.append(h('div', { class: 'panel' },
       h('h2', {}, 'Voix'),
@@ -535,6 +588,40 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--accent)
         file)));
 
     box.append(h('p', { class: 'muted small' }, 'Paquet : ' + PAQUET.titre + ' · version ' + PAQUET.version + ' · ' + PAQUET.cartes.length + ' cartes'));
+  }
+
+  function changeTracking(mode, sel) {
+    var prevMode = store.settings.tracking === 'separate' ? 'separate' : 'single';
+    if (mode === prevMode) return;
+    var msg = mode === 'separate'
+      ? "Chaque mot sera suivi séparément pour chaque type d'exercice. Les mots déjà appris gardent leur intervalle actuel pour les deux types, et le nombre de révisions augmentera progressivement. Continuer ?"
+      : "Pour chaque mot, l'intervalle le plus court des deux types d'exercice sera conservé. Continuer ?";
+    if (!confirm(msg)) { sel.value = prevMode; return; }
+    var cards = store.cards, out = {};
+    if (mode === 'separate') {
+      Object.keys(cards).forEach(function (k) {
+        if (k.indexOf('|') >= 0) { out[k] = cards[k]; return; }
+        out[k + '|1'] = Object.assign({}, cards[k]);
+        if (hasMode(k, 2)) out[k + '|2'] = Object.assign({}, cards[k]);
+      });
+    } else {
+      var ids = {};
+      Object.keys(cards).forEach(function (k) { ids[k.split('|')[0]] = true; });
+      Object.keys(ids).forEach(function (id) {
+        var cand = [cards[id], cards[id + '|1'], cards[id + '|2']].filter(Boolean);
+        var real = cand.filter(function (x) { return !x.ph; });
+        if (real.length) cand = real;
+        if (!cand.length) return;
+        cand.sort(function (a, b) { return a.due - b.due || a.ivl - b.ivl; });
+        var merged = Object.assign({}, cand[0]); delete merged.ph;
+        out[id] = merged;
+      });
+    }
+    store.cards = out;
+    store.settings.tracking = mode;
+    session = null;
+    save();
+    renderSettings();
   }
 
   function exportData() {
