@@ -110,10 +110,11 @@ b.hl{color:var(--accent)}
     <section id="view-review"></section>
     <section id="view-cards" hidden></section>
     <section id="view-settings" hidden></section>
+    <section id="view-choice" hidden></section>
   </main>
 </div>
 
-<script src="cartes.js"></script>
+<script src="paquets.js"></script>
 <script>
 /* ===================================================================
  *  1) Logique pure (planification des révisions) — testable sans écran
@@ -174,7 +175,7 @@ b.hl{color:var(--accent)}
 /* ===================================================================
  *  2) Application
  * =================================================================== */
-(function () {
+function demarrer() {
   'use strict';
   if (typeof document === 'undefined') return;
 
@@ -644,6 +645,16 @@ b.hl{color:var(--accent)}
     voiceSel.value = store.settings.voice || '';
     voiceSel.addEventListener('change', function () { store.settings.voice = voiceSel.value; save(); });
 
+    if (window.LISTE_PAQUETS && window.LISTE_PAQUETS.length > 1) {
+      var deckSel = h('select', {});
+      window.LISTE_PAQUETS.forEach(function (p) { deckSel.append(h('option', { value: p.fichier }, p.titre || p.fichier)); });
+      deckSel.value = window.PAQUET_FICHIER || '';
+      deckSel.addEventListener('change', function () { window.vocalesiaChoisir(deckSel.value); });
+      box.append(h('div', { class: 'panel' },
+        h('h2', {}, 'Jeu de cartes'),
+        h('div', { class: 'field' }, h('label', {}, 'Jeu actuel'), deckSel),
+        h('p', { class: 'muted small' }, 'Chaque jeu a sa propre progression : en changer ne fait rien perdre.')));
+    }
     box.append(h('div', { class: 'panel' },
       h('h2', {}, 'Révision'),
       h('div', { class: 'field' }, h('label', {}, 'Nouvelles cartes par jour'), newPer),
@@ -755,6 +766,56 @@ b.hl{color:var(--accent)}
   save();
   showWarn();
   showTab('review');
+}
+
+/* ===================================================================
+ *  3) Choix du jeu de cartes
+ *     paquets.js déclare la liste des jeux ; chaque jeu est un fichier (cartes.js, …) qui définit
+ *     window.PAQUET. Le dernier jeu utilisé est rouvert automatiquement ; on peut en changer dans
+ *     Réglages. Sans paquets.js, l'application charge simplement cartes.js.
+ * =================================================================== */
+(function () {
+  var LS = 'vocalesia.dernier';
+  var liste = (Array.isArray(window.LISTE_PAQUETS) && window.LISTE_PAQUETS.length)
+    ? window.LISTE_PAQUETS : [{ fichier: 'cartes.js', titre: 'Vocabulaire' }];
+  window.LISTE_PAQUETS = liste;
+  function lire() { try { return localStorage.getItem(LS) || ''; } catch (e) { return ''; } }
+  function ecrire(f) { try { localStorage.setItem(LS, f); } catch (e) {} }
+  window.vocalesiaChoisir = function (f) { ecrire(f); location.reload(); };
+
+  function choisir(msg) {
+    document.querySelector('nav').hidden = true;
+    document.querySelector('#view-review').hidden = true;
+    document.querySelector('#title').textContent = 'Choisis un jeu de cartes';
+    var box = document.querySelector('#view-choice');
+    box.hidden = false;
+    box.replaceChildren();
+    if (msg) { var n = document.createElement('div'); n.className = 'notice'; n.textContent = msg; box.append(n); }
+    var panel = document.createElement('div'); panel.className = 'panel';
+    liste.forEach(function (p) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'primary'; b.style.marginBottom = '10px';
+      b.textContent = p.titre || p.fichier;
+      b.addEventListener('click', function () { window.vocalesiaChoisir(p.fichier); });
+      panel.append(b);
+    });
+    box.append(panel);
+  }
+
+  function charger(f) {
+    window.PAQUET_FICHIER = f;
+    var sc = document.createElement('script');
+    sc.src = f;
+    sc.onload = demarrer;
+    sc.onerror = function () { ecrire(''); choisir('Le jeu « ' + f + " » est introuvable. Choisis-en un autre."); };
+    document.head.appendChild(sc);
+  }
+
+  var dernier = lire();
+  var connu = liste.filter(function (p) { return p.fichier === dernier; })[0];
+  if (connu) charger(connu.fichier);
+  else if (liste.length === 1) charger(liste[0].fichier);
+  else choisir();
 })();
 </script>
 </body>
