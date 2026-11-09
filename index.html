@@ -208,7 +208,7 @@ function demarrer() {
   }
   var store = load();
   function save() {
-    try { localStorage.setItem(KEY, JSON.stringify(store)); }
+    try { store.titre = PAQUET.titre; localStorage.setItem(KEY, JSON.stringify(store)); }
     catch (e) { if (storageOK) { storageOK = false; showWarn(); } }
   }
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
@@ -671,32 +671,65 @@ function demarrer() {
       h('div', { class: 'field' }, h('label', {}, 'Vitesse'), rate),
       h('div', { class: 'btnrow' }, h('button', { class: 'secondary', type: 'button', onclick: function () { speak('Bonjour, voici un exemple de voix.'); } }, '🔊 Tester la voix'))));
 
+    var importBox = h('div', {});
     var file = h('input', { type: 'file', accept: 'application/json,.json', hidden: true });
+    function refus(titre) {
+      alert('Cette sauvegarde est celle du jeu « ' + (titre || 'un autre jeu') + ' », pas de « ' + PAQUET.titre + ' ». ' +
+            "Ouvre d'abord ce jeu (Réglages → Jeu de cartes), puis importe-la là. Rien n'a été modifié.");
+    }
     file.addEventListener('change', function () {
       var f = file.files[0]; if (!f) return;
       var r = new FileReader();
       r.onload = function () {
+        importBox.replaceChildren();
+        var o;
+        try { o = JSON.parse(String(r.result)); } catch (e) { o = null; }
         try {
-          var o = JSON.parse(String(r.result));
-          if (!o || typeof o.cards !== 'object' || typeof o.selected !== 'object') throw new Error('format');
+          if (o && o.format === 'vocalesia-tous' && o.jeux && typeof o.jeux === 'object') {
+            var ids = Object.keys(o.jeux).filter(function (id) { return validStore(o.jeux[id].data); });
+            if (!ids.length) throw new Error('vide');
+            var boxes = {};
+            importBox.append(h('p', { class: 'small' }, 'Cette sauvegarde contient plusieurs jeux. Coche ceux que tu veux restaurer :'));
+            ids.forEach(function (id) {
+              var cb = h('input', { type: 'checkbox' }); cb.checked = true; boxes[id] = cb;
+              importBox.append(h('label', { class: 'hintbox small', style: 'display:flex' }, cb,
+                (o.jeux[id].titre || id) + (id === PAQUET.id ? ' (jeu ouvert)' : '')));
+            });
+            importBox.append(h('div', { class: 'btnrow' }, h('button', { class: 'secondary', type: 'button', onclick: function () {
+              var chosen = ids.filter(function (id) { return boxes[id].checked; });
+              if (!chosen.length) return;
+              if (!confirm('Remplacer la progression de ' + chosen.length + (chosen.length > 1 ? ' jeux' : ' jeu') + ' par celle de la sauvegarde ?')) return;
+              chosen.forEach(function (id) {
+                if (id === PAQUET.id) restoreCurrent(o.jeux[id].data); else restoreOther(id, o.jeux[id].data);
+              });
+              renderSettings(); alert('Progression restaurée.');
+            } }, 'Restaurer les jeux cochés')));
+            return;
+          }
+          var data = o && o.format === 'vocalesia' && o.data ? o.data : o;
+          if (!validStore(data)) throw new Error('format');
+          if (o.format === 'vocalesia' && o.paquet && o.paquet !== PAQUET.id) { refus(o.titre); return; }
+          if (o.format !== 'vocalesia' && !looksLikeThisDeck(data)) { refus(null); return; }
           if (!confirm('Remplacer ta progression actuelle par celle de la sauvegarde ?')) return;
-          var d = defaults();
-          store = Object.assign(d, o, { settings: Object.assign(d.settings, o.settings || {}) });
-          if (!Array.isArray(store.known) || !store.known.length) store.known = allIds.slice();
-          syncNew();
-          save(); session = null; renderSettings(); alert('Progression restaurée.');
+          restoreCurrent(data);
+          renderSettings(); alert('Progression restaurée.');
         } catch (e) { alert("Ce fichier n'est pas une sauvegarde valide."); }
       };
       r.readAsText(f);
+      file.value = '';
     });
+    var multi = (window.LISTE_PAQUETS && window.LISTE_PAQUETS.length > 1);
     box.append(h('div', { class: 'panel' },
       h('h2', {}, 'Sauvegarde de ma progression'),
-      h('p', { class: 'muted small' }, "Ta progression reste sur cet appareil. Pour la conserver en cas de changement de téléphone ou pour la copier sur un autre appareil, exporte-la puis importe-la là-bas."),
+      h('p', { class: 'muted small' }, "Ta progression reste sur cet appareil. Pour la conserver en cas de changement de téléphone ou pour la copier sur un autre appareil, exporte-la puis importe-la là-bas."
+        + (multi ? " « Exporter ce jeu » ne sauvegarde que le jeu ouvert ; « Exporter tous les jeux » les sauvegarde tous dans un seul fichier, dont tu choisis à l'import les jeux à restaurer. Une sauvegarde d'un jeu ne peut être importée que dans ce même jeu." : '')),
       h('div', { class: 'btnrow' },
-        h('button', { class: 'secondary', type: 'button', onclick: exportData }, '⬇️ Exporter'),
+        h('button', { class: 'secondary', type: 'button', onclick: exportData }, multi ? '⬇️ Exporter ce jeu' : '⬇️ Exporter'),
+        multi ? h('button', { class: 'secondary', type: 'button', onclick: exportAll }, '⬇️ Exporter tous les jeux') : null,
         h('button', { class: 'secondary', type: 'button', onclick: function () { file.click(); } }, '⬆️ Importer'),
-        h('button', { class: 'secondary', type: 'button', onclick: resetAll }, 'Tout effacer'),
-        file)));
+        h('button', { class: 'secondary', type: 'button', onclick: resetAll }, multi ? 'Effacer ce jeu' : 'Tout effacer'),
+        file),
+      importBox));
 
     box.append(h('p', { class: 'muted small' }, 'Paquet : ' + PAQUET.titre + ' · version ' + PAQUET.version + ' · ' + PAQUET.cartes.length + ' cartes'));
   }
@@ -735,14 +768,53 @@ function demarrer() {
     renderSettings();
   }
 
-  function exportData() {
-    var blob = new Blob([JSON.stringify(store)], { type: 'application/json' });
-    var a = h('a', { href: URL.createObjectURL(blob), download: 'ma-progression-' + (PAQUET.id || 'paquet') + '.json' });
+  function download(name, obj) {
+    var blob = new Blob([JSON.stringify(obj)], { type: 'application/json' });
+    var a = h('a', { href: URL.createObjectURL(blob), download: name });
     document.body.append(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
   }
+  function exportData() {
+    download('ma-progression-' + (PAQUET.id || 'paquet') + '.json',
+      { format: 'vocalesia', paquet: PAQUET.id, titre: PAQUET.titre, data: store });
+  }
+  // Tous les jeux dont ce navigateur garde une progression, y compris le jeu ouvert.
+  function allStores() {
+    var out = {};
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var m = /^flashcards\.(.+)\.v1$/.exec(localStorage.key(i) || '');
+        if (!m) continue;
+        var d = JSON.parse(localStorage.getItem(m[0]));
+        if (d && typeof d === 'object') out[m[1]] = { titre: d.titre || null, data: d };
+      }
+    } catch (e) {}
+    out[PAQUET.id] = { titre: PAQUET.titre, data: store };
+    return out;
+  }
+  function exportAll() {
+    download('ma-progression-tous-les-jeux.json', { format: 'vocalesia-tous', jeux: allStores() });
+  }
+  function validStore(o) { return !!o && typeof o === 'object' && !!o.cards && typeof o.cards === 'object' && !!o.selected && typeof o.selected === 'object'; }
+  function restoreCurrent(o) {
+    var d = defaults();
+    store = Object.assign(d, o, { settings: Object.assign(d.settings, o.settings || {}) });
+    if (!Array.isArray(store.known) || !store.known.length) store.known = allIds.slice();
+    syncNew();
+    save(); session = null;
+  }
+  function restoreOther(id, o) {
+    try { localStorage.setItem('flashcards.' + id + '.v1', JSON.stringify(o)); } catch (e) {}
+  }
+  // Une sauvegarde ancienne (sans identifiant de jeu) est reconnue à ses cartes.
+  function looksLikeThisDeck(o) {
+    var ids = {};
+    Object.keys(o.cards).concat(Object.keys(o.selected)).forEach(function (k) { ids[k.split('|')[0]] = true; });
+    var list = Object.keys(ids);
+    return list.length === 0 || list.some(function (k) { return byId[k]; });
+  }
   function resetAll() {
-    if (!confirm('Effacer toute ta progression et ta sélection de cartes ?')) return;
+    if (!confirm('Effacer toute ta progression et ta sélection de cartes' + ((window.LISTE_PAQUETS && window.LISTE_PAQUETS.length > 1) ? ' pour ce jeu (les autres jeux ne sont pas touchés)' : '') + ' ?')) return;
     try { localStorage.removeItem(KEY); } catch (e) {}
     store = defaults(); store.known = allIds.slice(); session = null;
     renderSettings();
