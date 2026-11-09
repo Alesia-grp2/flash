@@ -114,7 +114,7 @@ b.hl{color:var(--accent)}
   </main>
 </div>
 
-<script src="paquets.js"></script>
+<script src="paquets.js" onload="window.__paquetsLu = true"></script>
 <script>
 /* ===================================================================
  *  1) Logique pure (planification des révisions) — testable sans écran
@@ -235,6 +235,8 @@ function demarrer() {
     w.replaceChildren();
     if (!storageOK) w.append(h('div', { class: 'notice' },
       "Ton navigateur ne permet pas d'enregistrer ta progression (navigation privée ?). Ouvre cette page dans un onglet normal."));
+    if (window.__erreurPaquets) w.append(h('div', { class: 'notice' },
+      'Le fichier paquets.js contient une erreur (souvent une virgule oubliée entre deux paquets) : la liste des paquets est ignorée et seul cartes.js est chargé.'));
   }
 
   /* ---------------- Synthèse vocale ---------------- */
@@ -651,9 +653,9 @@ function demarrer() {
       deckSel.value = window.PAQUET_FICHIER || '';
       deckSel.addEventListener('change', function () { window.vocalesiaChoisir(deckSel.value); });
       box.append(h('div', { class: 'panel' },
-        h('h2', {}, 'Jeu de cartes'),
-        h('div', { class: 'field' }, h('label', {}, 'Jeu actuel'), deckSel),
-        h('p', { class: 'muted small' }, 'Chaque jeu a sa propre progression : en changer ne fait rien perdre.')));
+        h('h2', {}, 'Paquet de cartes'),
+        h('div', { class: 'field' }, h('label', {}, 'Paquet actuel'), deckSel),
+        h('p', { class: 'muted small' }, 'Chaque paquet a sa propre progression : en changer ne fait rien perdre.')));
     }
     box.append(h('div', { class: 'panel' },
       h('h2', {}, 'Révision'),
@@ -674,8 +676,8 @@ function demarrer() {
     var importBox = h('div', {});
     var file = h('input', { type: 'file', accept: 'application/json,.json', hidden: true });
     function refus(titre) {
-      alert('Cette sauvegarde est celle du jeu « ' + (titre || 'un autre jeu') + ' », pas de « ' + PAQUET.titre + ' ». ' +
-            "Ouvre d'abord ce jeu (Réglages → Jeu de cartes), puis importe-la là. Rien n'a été modifié.");
+      alert('Cette sauvegarde est celle du paquet « ' + (titre || 'un autre paquet') + ' », pas de « ' + PAQUET.titre + ' ». ' +
+            "Ouvre d'abord ce paquet (Réglages → Paquet de cartes), puis importe-la là. Rien n'a été modifié.");
     }
     file.addEventListener('change', function () {
       var f = file.files[0]; if (!f) return;
@@ -689,21 +691,21 @@ function demarrer() {
             var ids = Object.keys(o.jeux).filter(function (id) { return validStore(o.jeux[id].data); });
             if (!ids.length) throw new Error('vide');
             var boxes = {};
-            importBox.append(h('p', { class: 'small' }, 'Cette sauvegarde contient plusieurs jeux. Coche ceux que tu veux restaurer :'));
+            importBox.append(h('p', { class: 'small' }, 'Cette sauvegarde contient plusieurs paquets. Coche ceux que tu veux restaurer :'));
             ids.forEach(function (id) {
               var cb = h('input', { type: 'checkbox' }); cb.checked = true; boxes[id] = cb;
               importBox.append(h('label', { class: 'hintbox small', style: 'display:flex' }, cb,
-                (o.jeux[id].titre || id) + (id === PAQUET.id ? ' (jeu ouvert)' : '')));
+                (o.jeux[id].titre || id) + (id === PAQUET.id ? ' (paquet ouvert)' : '')));
             });
             importBox.append(h('div', { class: 'btnrow' }, h('button', { class: 'secondary', type: 'button', onclick: function () {
               var chosen = ids.filter(function (id) { return boxes[id].checked; });
               if (!chosen.length) return;
-              if (!confirm('Remplacer la progression de ' + chosen.length + (chosen.length > 1 ? ' jeux' : ' jeu') + ' par celle de la sauvegarde ?')) return;
+              if (!confirm('Remplacer la progression de ' + chosen.length + (chosen.length > 1 ? ' paquets' : ' paquet') + ' par celle de la sauvegarde ?')) return;
               chosen.forEach(function (id) {
                 if (id === PAQUET.id) restoreCurrent(o.jeux[id].data); else restoreOther(id, o.jeux[id].data);
               });
               renderSettings(); alert('Progression restaurée.');
-            } }, 'Restaurer les jeux cochés')));
+            } }, 'Restaurer les paquets cochés')));
             return;
           }
           var data = o && o.format === 'vocalesia' && o.data ? o.data : o;
@@ -722,12 +724,12 @@ function demarrer() {
     box.append(h('div', { class: 'panel' },
       h('h2', {}, 'Sauvegarde de ma progression'),
       h('p', { class: 'muted small' }, "Ta progression reste sur cet appareil. Pour la conserver en cas de changement de téléphone ou pour la copier sur un autre appareil, exporte-la puis importe-la là-bas."
-        + (multi ? " « Exporter ce jeu » ne sauvegarde que le jeu ouvert ; « Exporter tous les jeux » les sauvegarde tous dans un seul fichier, dont tu choisis à l'import les jeux à restaurer. Une sauvegarde d'un jeu ne peut être importée que dans ce même jeu." : '')),
+        + (multi ? " « Exporter ce paquet » ne sauvegarde que le paquet ouvert ; « Exporter tous les paquets » les sauvegarde tous dans un seul fichier, dont tu choisis à l'import les paquets à restaurer. Une sauvegarde d'un paquet ne peut être importée que dans ce même paquet." : '')),
       h('div', { class: 'btnrow' },
-        h('button', { class: 'secondary', type: 'button', onclick: exportData }, multi ? '⬇️ Exporter ce jeu' : '⬇️ Exporter'),
-        multi ? h('button', { class: 'secondary', type: 'button', onclick: exportAll }, '⬇️ Exporter tous les jeux') : null,
+        h('button', { class: 'secondary', type: 'button', onclick: exportData }, multi ? '⬇️ Exporter ce paquet' : '⬇️ Exporter'),
+        multi ? h('button', { class: 'secondary', type: 'button', onclick: exportAll }, '⬇️ Exporter tous les paquets') : null,
         h('button', { class: 'secondary', type: 'button', onclick: function () { file.click(); } }, '⬆️ Importer'),
-        h('button', { class: 'secondary', type: 'button', onclick: resetAll }, multi ? 'Effacer ce jeu' : 'Tout effacer'),
+        h('button', { class: 'secondary', type: 'button', onclick: resetAll }, multi ? 'Réinitialiser ce paquet' : 'Réinitialiser'),
         file),
       importBox));
 
@@ -778,7 +780,7 @@ function demarrer() {
     download('ma-progression-' + (PAQUET.id || 'paquet') + '.json',
       { format: 'vocalesia', paquet: PAQUET.id, titre: PAQUET.titre, data: store });
   }
-  // Tous les jeux dont ce navigateur garde une progression, y compris le jeu ouvert.
+  // Tous les paquets dont ce navigateur garde une progression, y compris le paquet ouvert.
   function allStores() {
     var out = {};
     try {
@@ -793,7 +795,7 @@ function demarrer() {
     return out;
   }
   function exportAll() {
-    download('ma-progression-tous-les-jeux.json', { format: 'vocalesia-tous', jeux: allStores() });
+    download('ma-progression-tous-les-paquets.json', { format: 'vocalesia-tous', jeux: allStores() });
   }
   function validStore(o) { return !!o && typeof o === 'object' && !!o.cards && typeof o.cards === 'object' && !!o.selected && typeof o.selected === 'object'; }
   function restoreCurrent(o) {
@@ -806,7 +808,7 @@ function demarrer() {
   function restoreOther(id, o) {
     try { localStorage.setItem('flashcards.' + id + '.v1', JSON.stringify(o)); } catch (e) {}
   }
-  // Une sauvegarde ancienne (sans identifiant de jeu) est reconnue à ses cartes.
+  // Une sauvegarde ancienne (sans identifiant de paquet) est reconnue à ses cartes.
   function looksLikeThisDeck(o) {
     var ids = {};
     Object.keys(o.cards).concat(Object.keys(o.selected)).forEach(function (k) { ids[k.split('|')[0]] = true; });
@@ -814,7 +816,9 @@ function demarrer() {
     return list.length === 0 || list.some(function (k) { return byId[k]; });
   }
   function resetAll() {
-    if (!confirm('Effacer toute ta progression et ta sélection de cartes' + ((window.LISTE_PAQUETS && window.LISTE_PAQUETS.length > 1) ? ' pour ce jeu (les autres jeux ne sont pas touchés)' : '') + ' ?')) return;
+    var multi = window.LISTE_PAQUETS && window.LISTE_PAQUETS.length > 1;
+    if (!confirm('Réinitialiser' + (multi ? ' ce paquet' : '') + ' ? Ta sélection de cartes et ton avancement dans les révisions seront remis à zéro'
+      + (multi ? ' (les autres paquets ne sont pas touchés)' : '') + '.')) return;
     try { localStorage.removeItem(KEY); } catch (e) {}
     store = defaults(); store.known = allIds.slice(); session = null;
     renderSettings();
@@ -841,15 +845,17 @@ function demarrer() {
 }
 
 /* ===================================================================
- *  3) Choix du jeu de cartes
- *     paquets.js déclare la liste des jeux ; chaque jeu est un fichier (cartes.js, …) qui définit
- *     window.PAQUET. Le dernier jeu utilisé est rouvert automatiquement ; on peut en changer dans
+ *  3) Choix du paquet de cartes
+ *     paquets.js déclare la liste des paquets ; chaque paquet est un fichier (cartes.js, …) qui définit
+ *     window.PAQUET. Le dernier paquet utilisé est rouvert automatiquement ; on peut en changer dans
  *     Réglages. Sans paquets.js, l'application charge simplement cartes.js.
  * =================================================================== */
 (function () {
   var LS = 'vocalesia.dernier';
   var liste = (Array.isArray(window.LISTE_PAQUETS) && window.LISTE_PAQUETS.length)
     ? window.LISTE_PAQUETS : [{ fichier: 'cartes.js', titre: 'Vocabulaire' }];
+  // fichier présent mais illisible (erreur de syntaxe) : il se charge sans définir la liste
+  if (window.__paquetsLu && !(Array.isArray(window.LISTE_PAQUETS) && window.LISTE_PAQUETS.length)) window.__erreurPaquets = 'erreur de syntaxe';
   window.LISTE_PAQUETS = liste;
   function lire() { try { return localStorage.getItem(LS) || ''; } catch (e) { return ''; } }
   function ecrire(f) { try { localStorage.setItem(LS, f); } catch (e) {} }
@@ -858,7 +864,7 @@ function demarrer() {
   function choisir(msg) {
     document.querySelector('nav').hidden = true;
     document.querySelector('#view-review').hidden = true;
-    document.querySelector('#title').textContent = 'Choisis un jeu de cartes';
+    document.querySelector('#title').textContent = 'Choisis un paquet de cartes';
     var box = document.querySelector('#view-choice');
     box.hidden = false;
     box.replaceChildren();
@@ -879,7 +885,7 @@ function demarrer() {
     var sc = document.createElement('script');
     sc.src = f;
     sc.onload = demarrer;
-    sc.onerror = function () { ecrire(''); choisir('Le jeu « ' + f + " » est introuvable. Choisis-en un autre."); };
+    sc.onerror = function () { ecrire(''); choisir('Le paquet « ' + f + " » est introuvable. Choisis-en un autre."); };
     document.head.appendChild(sc);
   }
 
