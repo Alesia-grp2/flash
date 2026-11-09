@@ -7,6 +7,6 @@
  * Le premier jeu est celui qui n'a pas encore été choisi : l'élève choisit au premier lancement.
  */
 window.LISTE_PAQUETS = [
-  { fichier: "cartes.js", titre: "Vocabulaire de français" }
+  { fichier: "cartes.js", titre: "Vocabulaire de français" },
   { fichier: "cartes-grpe2-2026-2027.js", titre: "Vocabulaire Groupe 2 2026-2027" } 
 ];
