@@ -16,7 +16,7 @@
 window.PAQUET = {
   id: "francais-vocabulaire",
   titre: "Vocabulaire de français",
-  version: 2,
+  version: 3,
   cartes: [
     // ---------- Leçon 1 — Lundi 9/11/2026 ----------
     {
@@ -49,13 +49,6 @@ window.PAQUET = {
     },
     {
       id: "L1-05",
-      lecon: "Leçon 1 — Lundi 9/11/2026",
-      mot: "intime",
-      definition: "Qui a une relation très proche et très forte avec quelqu'un.",
-      exemples: ["Julien est un ami [intime] de mon frère depuis l'enfance.", "Elles sont restées très [intimes] malgré la distance."]
-    },
-    {
-      id: "L1-06",
       lecon: "Leçon 1 — Lundi 9/11/2026",
       mot: "embêter",
       definition: "Déranger quelqu'un ou lui causer des petits problèmes, de façon agaçante.",
