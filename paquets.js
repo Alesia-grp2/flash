@@ -7,6 +7,5 @@
  * Si ce fichier est absent, l'application charge simplement cartes.js.
  */
 window.LISTE_PAQUETS = [
-  { fichier: "cartes.js", titre: "Vocabulaire de français" },
   { fichier: "cartes-grpe2-2026-2027.js", titre: "Vocabulaire Groupe 2 2026-2027" }
 ];

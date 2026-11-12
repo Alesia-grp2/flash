@@ -92,6 +92,7 @@ b.hl{color:var(--accent)}
 .brand{margin:0;font-size:2.25rem;line-height:1.1;font-weight:300;color:var(--ink)}
 .brand .b1{display:inline-block;font-weight:700;line-height:1;padding-bottom:3px;border-bottom:4px solid var(--accent)}
 .tagline{margin:4px 0 0;font-size:.85rem;color:var(--mute)}
+.indice{color:var(--mute);font-size:.85rem;margin:.2rem 0}
 [hidden]{display:none !important}
 </style>
 </head>
@@ -502,39 +503,51 @@ function demarrer() {
     }));
   }
 
+  // Affichage du mot : « mot* » pour un mot familier (l'astérisque n'est jamais prononcé)
+  function motAff(c) { return c.familier ? c.mot + '*' : c.mot; }
+  function noteFam(c) { return c.familier ? h('p', { class: 'indice' }, '* registre familier') : null; }
+  function indiceTxt(c) { return c.indice ? h('p', { class: 'indice' }, 'Indice : ' + c.indice) : null; }
+
+  // Ajoute des éléments en ignorant les valeurs vides (null) : sinon le navigateur écrirait « null »
+  function put(el) {
+    for (var i = 1; i < arguments.length; i++) {
+      [].concat(arguments[i]).forEach(function (c) { if (c != null && c !== false) el.append(c); });
+    }
+  }
+
   function cardView(card, item, revealed) {
     var el = h('div', { class: 'card' });
     var ex = card.exemples || [];
     if (item.mode === 1) {
-      el.append(h('p', { class: 'label' }, 'Écoute le mot'));
+      put(el, h('p', { class: 'label' }, 'Écoute le mot'));
       if (!revealed) {
-        var hintWord = h('div', { class: 'word', id: 'hintword', hidden: !session.hint }, card.mot);
+        var hintWord = h('div', { class: 'word', id: 'hintword', hidden: !session.hint }, motAff(card));
         var cb = h('input', { type: 'checkbox', id: 'hint' });
         cb.checked = !!session.hint;
         cb.addEventListener('change', function () { session.hint = cb.checked; hintWord.hidden = !cb.checked; });
-        el.append(speakBtn(card.mot, card.audio, 'bigspeak'), hintWord,
+        put(el, speakBtn(card.mot, card.audio, 'bigspeak'), hintWord, indiceTxt(card),
           h('p', { class: 'muted' }, 'Quel est ce mot ? Que veut-il dire ?'),
           h('label', { class: 'hintbox small' }, cb, "Je n'ai pas bien compris le mot : afficher l'écrit"));
       } else {
-        el.append(h('div', { class: 'word' }, card.mot), speakBtn(card.mot, card.audio),
+        put(el, h('div', { class: 'word' }, motAff(card)), speakBtn(card.mot, card.audio), indiceTxt(card), noteFam(card),
           h('hr', { class: 'sep' }),
           card.definition ? h('p', { class: 'def' }, card.definition) : null,
           exampleList(ex, -1));
       }
     } else {
       var ci = clozeIndex(ex);          // première phrase contenant un mot entre crochets (-1 : aucune)
-      el.append(h('p', { class: 'label' }, 'Quel est le mot ?'), h('p', { class: 'def' }, card.definition));
+      put(el, h('p', { class: 'label' }, 'Quel est le mot ?'), h('p', { class: 'def' }, card.definition));
       if (ci >= 0) {
         if (!revealed) {
-          el.append(h('p', { class: 'cloze-label' }, 'Complète la phrase :'),
+          put(el, h('p', { class: 'cloze-label' }, 'Complète la phrase :'),
             h('p', { class: 'cloze' }, sentence(ex[ci], 'blank')));
         } else {
-          el.append(h('div', { class: 'cloze-row' }, speakBtn(stripBrackets(ex[ci])), h('span', {}, sentence(ex[ci], 'fill'))));
+          put(el, h('div', { class: 'cloze-row' }, speakBtn(stripBrackets(ex[ci])), h('span', {}, sentence(ex[ci], 'fill'))));
         }
       }
       if (revealed) {
-        el.append(h('hr', { class: 'sep' }),
-          h('div', { class: 'word' }, card.mot), speakBtn(card.mot, card.audio),
+        put(el, h('hr', { class: 'sep' }),
+          h('div', { class: 'word' }, motAff(card)), speakBtn(card.mot, card.audio), noteFam(card),
           exampleList(ex, ci));
       }
     }
@@ -608,7 +621,7 @@ function demarrer() {
           chip = h('span', { class: 'chip' }, d <= 0 ? 'À revoir' : (d === 1 ? 'Demain' : 'Dans ' + d + ' j'));
         }
         det.append(h('div', { class: 'row' },
-          h('label', {}, cb, h('span', { class: 't' }, h('span', { class: hl[id] ? 'fresh' : '' }, c.mot), chip)),
+          h('label', {}, cb, h('span', { class: 't' }, h('span', { class: hl[id] ? 'fresh' : '' }, motAff(c)), c.indice ? h('span', { class: 'indice' }, ' (' + c.indice + ')') : null, chip)),
           speakBtn(c.mot, c.audio)));
       });
       refreshHead();
