@@ -437,10 +437,17 @@ function demarrer() {
   }
 
   /* ---------------- Synthèse vocale ---------------- */
-  var voices = [], currentAudio = null;
+  var voices = [], allFr = [], currentAudio = null;
   function refreshVoices() {
     if (!('speechSynthesis' in window)) return;
-    voices = speechSynthesis.getVoices().filter(function (v) { return /^fr/i.test(v.lang); });
+    allFr = speechSynthesis.getVoices().filter(function (v) { return /^fr/i.test(v.lang); });
+    // Certains navigateurs (macOS notamment) listent la même voix plusieurs fois : on n'en garde qu'une dans le menu
+    var seen = {};
+    voices = allFr.filter(function (v) {
+      var k = v.name + '|' + v.lang;
+      if (seen[k]) return false;
+      seen[k] = true; return true;
+    });
   }
   if ('speechSynthesis' in window) {
     refreshVoices();
@@ -448,7 +455,7 @@ function demarrer() {
   }
   function pickVoice() {
     if (store.settings.voice) {
-      var v = voices.find(function (x) { return x.voiceURI === store.settings.voice; });
+      var v = allFr.find(function (x) { return x.voiceURI === store.settings.voice; });
       if (v) return v;
     }
     return voices.find(function (x) { return /fr[-_]FR/i.test(x.lang); }) || voices[0] || null;
@@ -892,6 +899,11 @@ function demarrer() {
     voiceSel.append(h('option', { value: '' }, 'Automatique'));
     voices.forEach(function (v) { voiceSel.append(h('option', { value: v.voiceURI }, v.name + ' (' + v.lang + ')')); });
     voiceSel.value = store.settings.voice || '';
+    if (store.settings.voice && voiceSel.value !== store.settings.voice) {   // voix mémorisée = un doublon écarté du menu
+      var dup = allFr.find(function (x) { return x.voiceURI === store.settings.voice; });
+      var kept = dup && voices.find(function (x) { return x.name === dup.name && x.lang === dup.lang; });
+      if (kept) voiceSel.value = kept.voiceURI;
+    }
     voiceSel.addEventListener('change', function () { store.settings.voice = voiceSel.value; save(); });
 
     if (window.LISTE_PAQUETS && window.LISTE_PAQUETS.length > 1) {
