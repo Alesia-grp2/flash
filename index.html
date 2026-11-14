@@ -93,6 +93,22 @@ b.hl{color:var(--accent)}
 .brand .b1{display:inline-block;font-weight:700;line-height:1;padding-bottom:3px;border-bottom:4px solid var(--accent)}
 .tagline{margin:4px 0 0;font-size:.85rem;color:var(--mute)}
 .indice{color:var(--mute);font-size:.85rem;margin:.2rem 0}
+/* aide */
+.help h2{font-size:1.05rem;margin:1.5rem 0 .5rem;scroll-margin-top:12px}
+.help h3{font-size:.95rem;margin:1rem 0 .3rem}
+.help p,.help li{line-height:1.5}
+.help ul{padding-left:1.25rem;margin:.4rem 0}
+.help table{width:100%;border-collapse:collapse;font-size:.88rem;margin:.6rem 0}
+.help th,.help td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top;overflow-wrap:break-word}
+.help th{background:var(--card)}
+.help .toc{list-style:none;padding:0;margin:0}
+.help .toc li{margin:0}
+.help .toc a,.help .toplink{color:var(--accent);text-decoration:none;cursor:pointer}
+.help .toc a{display:block;padding:7px 2px;border-bottom:1px solid var(--line)}
+.help .toplink{display:inline-block;margin:.6rem 0 0;font-size:.85rem}
+.help .notice{margin:.8rem 0}
+.help .intro{margin-top:.4rem}
+.help .btnrow .primary{width:auto;padding:10px 18px}
 [hidden]{display:none !important}
 </style>
 </head>
@@ -106,12 +122,14 @@ b.hl{color:var(--accent)}
     <button role="tab" id="tab-review" aria-selected="true">Réviser</button>
     <button role="tab" id="tab-cards" aria-selected="false">Cartes<span id="badge" class="badge" hidden></span></button>
     <button role="tab" id="tab-settings" aria-selected="false">Réglages</button>
+    <button role="tab" id="tab-help" aria-selected="false">Aide</button>
   </nav>
   <div id="warn"></div>
   <main>
     <section id="view-review"></section>
     <section id="view-cards" hidden></section>
     <section id="view-settings" hidden></section>
+    <section id="view-help" hidden></section>
     <section id="view-choice" hidden></section>
   </main>
 </div>
@@ -177,6 +195,183 @@ b.hl{color:var(--accent)}
 /* ===================================================================
  *  2) Application
  * =================================================================== */
+/* ===================================================================
+ *  Aide intégrée (français / English). Contenu statique.
+ * =================================================================== */
+var AIDE = {
+  fr: {
+    titre: 'Aide',
+    intro: "Vocalésia t'aide à retenir du vocabulaire grâce à des cartes. Les mots que tu connais bien reviennent à intervalles de plus en plus longs (<b>révision espacée</b>), les mots difficiles reviennent plus vite. Rien à installer, aucun compte à créer.",
+    sommaire: 'Sommaire',
+    haut: '↑ Sommaire',
+    sections: [
+      { id: 'demarrer', t: "1. Ouvrir l'application", h: [
+        "<p>Ouvre le lien donné par ton professeur dans le navigateur de ton téléphone (Safari sur iPhone, Chrome sur Android) ou de ton ordinateur.</p>",
+        "<p>Place l'application sur l'écran d'accueil, pour la retrouver comme une application :</p>",
+        "<ul><li><b>iPhone (Safari)</b> : touche le bouton Partager, puis « Sur l'écran d'accueil ».</li>",
+        "<li><b>Android (Chrome)</b> : touche le menu ⋮, puis « Ajouter à l'écran d'accueil » (ou « Installer l'application »).</li></ul>",
+        "<p>Ouvre ensuite toujours l'application par cette icône : tu retrouveras ta progression.</p>",
+        "<div class='notice'><b>Important.</b> Ta progression est enregistrée dans ce navigateur, sur cet appareil. Si tu utilises un autre navigateur ou un autre appareil, tu repartiras de zéro (voir la section 7 pour la déplacer).</div>"] },
+      { id: 'cartes', t: "2. Choisir les cartes (onglet « Cartes »)", h: [
+        "<ul><li>Les mots sont rangés par leçon. <b>Coche</b> les mots que tu veux mémoriser, ou la case de la leçon pour tout cocher d'un coup. Seules les cartes cochées te sont proposées.</li>",
+        "<li>Le compteur à droite de chaque leçon indique combien de cartes tu as cochées (par exemple 3 / 7).</li>",
+        "<li>Le <b>triangle</b> à gauche d'une leçon permet de la replier ou de la développer. La case <b>« Tout réduire »</b> replie toutes les leçons d'un coup ; en la décochant, tu les développes toutes.</li>",
+        "<li>Le bouton 🔊 d'un mot te le fait écouter.</li>",
+        "<li>Un mot suivi d'un <b>astérisque</b> (par exemple « un flic* ») appartient au <b>registre familier</b> : on l'entend à l'oral entre amis, mais on l'évite à l'écrit soigné ou avec un supérieur.</li>",
+        "<li>À côté de chaque mot déjà étudié, une pastille indique quand il reviendra : « À revoir », « Demain » ou « Dans n j ».</li>",
+        "<li><b>Nouveautés</b> : quand ton professeur ajoute des cartes, un badge rouge apparaît sur l'onglet « Cartes ». Les nouveaux mots et leur leçon s'affichent en rouge, avec la pastille « Nouveau », jusqu'au prochain ajout.</li></ul>"] },
+      { id: 'reviser', t: "3. Réviser (onglet « Réviser »)", h: [
+        "<p>L'écran d'accueil indique le nombre de cartes <b>à revoir</b> et de <b>nouvelles</b> cartes du jour. Touche « Commencer » pour lancer une séance. Une barre de progression te montre où tu en es.</p>",
+        "<h3>Les deux types de cartes</h3>",
+        "<ul><li><b>« Écoute le mot »</b> : tu entends un mot. Essaie de le reconnaître et d'en retrouver le sens. Quand un mot a plusieurs sens, un « Indice » s'affiche pour te dire lequel est demandé. Touche 🔊 pour le réécouter. Si tu n'as pas bien compris le mot, coche « Je n'ai pas bien compris le mot : afficher l'écrit » : il s'affiche sans que l'audio soit relancé. Puis touche « Afficher la réponse » : tu vois le mot, sa définition et des exemples.</li>",
+        "<li><b>« Quel est le mot ? »</b> : tu lis une définition. Parfois, une phrase est proposée avec un blanc (« Complète la phrase ») : le mot cherché peut y être accordé ou conjugué, pense à la forme qui convient (par exemple « emménager » devient « emménagé »). Puis touche « Afficher la réponse » : le mot s'affiche et est lu, la phrase est complétée (le mot est en bleu) et d'autres phrases d'exemple apparaissent.</li></ul>",
+        "<h3>Noter ta réponse</h3>",
+        "<p>Après avoir vu la réponse, choisis honnêtement le bouton qui correspond à ce que tu savais. Le délai avant la prochaine révision est indiqué sur chaque bouton.</p>",
+        "<table><tr><th>Bouton</th><th>Quand le choisir</th><th>Ce qui se passe</th></tr>",
+        "<tr><td><b>Encore</b></td><td>Je ne savais pas, ou je me suis trompé(e).</td><td>La carte revient dans la même séance, après quelques autres cartes, souvent sous l'autre forme.</td></tr>",
+        "<tr><td><b>Difficile</b></td><td>J'ai trouvé, mais avec beaucoup d'hésitation.</td><td>La carte revient bientôt, avec un délai un peu plus long qu'avant.</td></tr>",
+        "<tr><td><b>Bien</b></td><td>J'ai trouvé sans trop de difficulté.</td><td>Le délai s'allonge normalement (par exemple 1 jour, puis 3, puis 8, puis 20 jours…).</td></tr>",
+        "<tr><td><b>Facile</b></td><td>C'était évident.</td><td>Le délai s'allonge beaucoup.</td></tr></table>"] },
+      { id: 'arreter', t: "4. Arrêter une séance", h: [
+        "<p>Touche <b>« Terminer »</b> (en haut à droite, à côté du compteur) pour arrêter quand tu veux. Ta progression est enregistrée après chaque carte : les cartes que tu n'as pas faites te seront reproposées. Tu peux relancer une séance avec « Commencer ».</p>"] },
+      { id: 'clavier', t: "5. Raccourcis clavier (ordinateur)", h: [
+        "<table><tr><th>Touche</th><th>Action</th></tr>",
+        "<tr><td>Espace ou Entrée</td><td>Afficher la réponse</td></tr>",
+        "<tr><td>1, 2, 3, 4</td><td>Noter : Encore, Difficile, Bien, Facile</td></tr>",
+        "<tr><td>R</td><td>Réécouter le mot</td></tr>",
+        "<tr><td>Échap</td><td>Terminer la séance</td></tr></table>"] },
+      { id: 'reglages', t: "6. Les réglages (onglet « Réglages »)", h: [
+        "<table><tr><th>Réglage</th><th>Effet</th></tr>",
+        "<tr><td>Paquet de cartes</td><td>Visible seulement s'il y a plusieurs paquets. Change de paquet : l'application se recharge avec l'autre paquet, dont la progression est conservée séparément. Au premier lancement, l'application demande quel paquet ouvrir ; ensuite elle rouvre le dernier paquet utilisé. Le nom du paquet s'affiche dans la bannière.</td></tr>",
+        "<tr><td>Nouvelles cartes par jour</td><td>Nombre maximal de nouveaux mots proposés chaque jour (10 par défaut). Mets moins si tu es débordé(e).</td></tr>",
+        "<tr><td>Lecture audio automatique</td><td>Lit le mot dès que la carte s'affiche ou que la réponse apparaît.</td></tr>",
+        "<tr><td>Suivi des cartes</td><td>« Un seul suivi par mot » : un mot compte pour une révision, quel que soit le type de carte. « Suivi séparé par type d'exercice » : l'écoute et la définition sont planifiées chacune de leur côté ; tu révises environ deux fois plus de cartes mais tu suis mieux chaque compétence. Le changement demande une confirmation.</td></tr>",
+        "<tr><td>Voix et vitesse</td><td>Choix de la voix française de l'appareil et vitesse de lecture. Le bouton « Tester la voix » permet d'essayer.</td></tr></table>"] },
+      { id: 'sauvegarde', t: "7. Sauvegarder et déplacer sa progression", h: [
+        "<ul><li><b>Exporter</b> (ou <b>Exporter ce paquet</b> quand il y a plusieurs paquets) : télécharge un fichier contenant la progression et les réglages du paquet ouvert.</li>",
+        "<li><b>Exporter tous les paquets</b> (visible seulement avec plusieurs paquets) : un seul fichier contenant la progression de tous les paquets utilisés sur cet appareil.</li>",
+        "<li><b>Importer</b> : recharge un fichier exporté (par exemple sur un nouveau téléphone), après confirmation. Avec une sauvegarde de tous les paquets, une liste à cocher permet de ne restaurer que certains paquets.</li>",
+        "<li><b>Réinitialiser</b> (ou <b>Réinitialiser ce paquet</b>) : remet à zéro ta sélection de cartes et ton avancement dans les révisions pour le paquet ouvert ; les autres paquets ne sont pas touchés. Le contenu du paquet, lui, n'est pas enregistré sur ton appareil et n'est donc pas concerné.</li></ul>",
+        "<div class='notice'><b>Sécurité.</b> Une sauvegarde d'un paquet ne peut être importée que dans ce même paquet : si tu choisis par erreur le fichier d'un autre paquet, l'application le refuse avec un message et ne modifie rien. Pour restaurer un autre paquet, ouvre-le d'abord (Réglages → Paquet de cartes).</div>",
+        "<p><b>Conseil.</b> Exporte ta progression de temps en temps, et toujours avant de changer de téléphone ou d'effacer les données de ton navigateur.</p>",
+        "<h3>Quand ma progression peut-elle disparaître ?</h3>",
+        "<p>Ta progression est enregistrée dans ton navigateur, sur ton appareil. Elle ne disparaît pas lors d'une mise à jour habituelle du système, mais elle peut être perdue dans ces situations :</p>",
+        "<ul><li><b>Longue pause sur iPhone ou iPad</b> : si tu n'ouvres pas Vocalésia pendant une longue période (une semaine ou plus d'utilisation de Safari, par exemple pendant les vacances), Safari peut supprimer les données du site. Ajouter Vocalésia à l'écran d'accueil limite ce risque.</li>",
+        "<li><b>Nettoyage du navigateur</b> : « effacer les données de sites », une application de nettoyage ou la réinstallation du navigateur supprime tout.</li>",
+        "<li><b>Téléphone presque plein</b> : le système peut libérer de la place en supprimant des données de sites peu utilisés.</li>",
+        "<li><b>Autre appareil ou autre navigateur</b> : la progression ne suit pas ; il faut l'exporter puis l'importer.</li>",
+        "<li><b>Navigation privée</b> : tout disparaît à la fermeture de la fenêtre.</li></ul>",
+        "<div class='notice'><b>À faire avant une longue pause, un changement de téléphone ou un nettoyage.</b> Va dans Réglages et exporte ta progression, puis garde le fichier (dans tes documents, ou envoie-le toi par e-mail). Tu pourras le réimporter si besoin.</div>"] },
+      { id: 'conseils', t: "8. Conseils pour bien mémoriser", h: [
+        "<ul><li>Révise <b>un peu chaque jour</b> (5 à 10 minutes) plutôt que longtemps de temps en temps.</li>",
+        "<li>Ne choisis pas trop de cartes d'un coup : ajoute-les au fur et à mesure des leçons.</li>",
+        "<li>Note-toi honnêtement : un « Facile » trop généreux espace trop les révisions.</li>",
+        "<li>N'utilise pas la navigation privée et n'efface pas les données du site : tu perdrais ta progression.</li></ul>"] },
+      { id: 'problemes', t: "9. En cas de problème", h: [
+        "<table><tr><th>Problème</th><th>Que faire ?</th></tr>",
+        "<tr><td>Je n'entends rien</td><td>Vérifie le volume du téléphone et qu'il n'est pas en mode silencieux. Va dans « Réglages » et touche « Tester la voix ».</td></tr>",
+        "<tr><td>L'application dit qu'aucune voix française n'a été trouvée</td><td>Installe une voix française dans les réglages de ton appareil (accessibilité ou synthèse vocale), puis recharge la page.</td></tr>",
+        "<tr><td>Je ne vois pas les nouvelles cartes</td><td>Recharge la page (actualise-la). Attends quelques minutes si ton professeur vient de les publier.</td></tr>",
+        "<tr><td>Ma progression a disparu</td><td>Tu utilises peut-être un autre navigateur ou un autre appareil, ou les données du navigateur ont été effacées. Importe ta dernière sauvegarde (section 7).</td></tr>",
+        "<tr><td>Un message dit que la progression ne peut pas être enregistrée</td><td>Tu es sans doute en navigation privée. Ouvre l'application dans un onglet normal.</td></tr>",
+        "<tr><td>La page est vide ou affiche une erreur</td><td>Préviens ton professeur : le fichier de cartes doit être vérifié.</td></tr></table>"] }
+    ]
+  },
+  en: {
+    titre: 'Help',
+    intro: "Vocalésia helps you remember vocabulary with flashcards. Words you know well come back after longer and longer intervals (<b>spaced repetition</b>); words you find difficult come back sooner. Nothing to install, no account to create.",
+    sommaire: 'Contents',
+    haut: '↑ Contents',
+    sections: [
+      { id: 'glossaire', t: 'Glossary: the app is in French', h: [
+        "<p>Buttons and labels appear in French. This help gives the French wording as you will see it, followed by the English meaning, for example <b>Réviser</b> (Review).</p>",
+        "<table><tr><th>What you see</th><th>Meaning</th></tr>",
+        "<tr><td><b>Réviser</b></td><td>Review (the tab where you practise)</td></tr>",
+        "<tr><td><b>Cartes</b></td><td>Cards (the tab where you choose your words)</td></tr>",
+        "<tr><td><b>Réglages</b></td><td>Settings</td></tr>",
+        "<tr><td><b>Aide</b></td><td>Help</td></tr>",
+        "<tr><td><b>Commencer</b></td><td>Start</td></tr>",
+        "<tr><td><b>Terminer</b></td><td>Finish / stop the session</td></tr>",
+        "<tr><td><b>Afficher la réponse</b></td><td>Show the answer</td></tr>",
+        "<tr><td><b>Encore · Difficile · Bien · Facile</b></td><td>Again · Hard · Good · Easy</td></tr>",
+        "<tr><td><b>À revoir · Demain · Dans n j</b></td><td>Due now · Tomorrow · In n days</td></tr>",
+        "<tr><td><b>Nouveau</b></td><td>New</td></tr>",
+        "<tr><td><b>Tout réduire</b></td><td>Collapse all</td></tr>",
+        "<tr><td><b>Exporter · Importer · Réinitialiser</b></td><td>Export · Import · Reset</td></tr></table>"] },
+      { id: 'demarrer', t: '1. Open the app and add it to your home screen', h: [
+        "<p>Open the link your teacher gave you in your phone's browser (Safari on iPhone, Chrome on Android) or on your computer.</p>",
+        "<p>Add the app to your home screen so you can open it like any other app:</p>",
+        "<ul><li><b>iPhone (Safari):</b> tap the Share button, then “Add to Home Screen”.</li>",
+        "<li><b>Android (Chrome):</b> tap the ⋮ menu, then “Add to Home screen” (or “Install app”).</li></ul>",
+        "<p>From then on, always open the app from that icon: your progress will be there.</p>",
+        "<div class='notice'><b>Important.</b> Your progress is saved in this browser, on this device. If you use another browser or another device, you will start from zero (see section 7 to move your progress).</div>"] },
+      { id: 'cartes', t: '2. Choose the cards you want to learn (tab « Cartes »)', h: [
+        "<ul><li>Words are grouped by lesson. <b>Tick</b> the words you want to learn, or tick the lesson box to select the whole lesson. Only the ticked cards are offered to you.</li>",
+        "<li>The counter to the right of each lesson shows how many cards you have ticked (for example 3 / 7).</li>",
+        "<li>The <b>triangle</b> to the left of a lesson folds or unfolds it. The <b>« Tout réduire »</b> (Collapse all) box folds every lesson at once; untick it to unfold them all.</li>",
+        "<li>The 🔊 button next to a word plays it.</li>",
+        "<li>A word followed by an <b>asterisk</b> (for example « un flic* ») belongs to <b>informal (colloquial) French</b>: you hear it in everyday speech among friends, but you avoid it in careful writing or with a superior.</li>",
+        "<li>Next to each word you have already studied, a label tells you when it will come back: « À revoir » (due now), « Demain » (tomorrow) or « Dans n j » (in n days).</li>",
+        "<li><b>New words:</b> when your teacher adds cards, a red badge appears on the « Cartes » tab. The new words and their lesson are shown in red, with the label « Nouveau » (New), until the next addition.</li></ul>"] },
+      { id: 'reviser', t: '3. Review (tab « Réviser »)', h: [
+        "<p>The home screen shows how many cards are <b>due</b> for review and how many <b>new</b> cards you can study today. Tap « Commencer » (Start) to begin a session. A progress bar shows where you are.</p>",
+        "<h3>The two kinds of card</h3>",
+        "<ul><li><b>« Écoute le mot » (Listen to the word):</b> you hear a word. Try to recognise it and recall its meaning. When a word has several meanings, a hint (« Indice », Hint) tells you which one is asked. Tap 🔊 to hear it again. If you did not understand the word, tick « Je n'ai pas bien compris le mot : afficher l'écrit » (I did not understand the word: show it in writing): the written word appears without replaying the audio. Then tap « Afficher la réponse »: you see the word, its definition and example sentences.</li>",
+        "<li><b>« Quel est le mot ? » (What is the word?):</b> you read a definition. Sometimes a sentence is shown with a blank (« Complète la phrase », Complete the sentence): the missing word may need to be agreed or conjugated, so think of the right form (for example “emménager” becomes “emménagé”). Then tap « Afficher la réponse »: the word is displayed and read aloud, the sentence is completed (the word is highlighted in blue) and more example sentences appear.</li></ul>",
+        "<h3>Rate your answer</h3>",
+        "<p>Once you have seen the answer, honestly choose the button that matches how well you knew it. Each button shows how long it will be before the card comes back.</p>",
+        "<table><tr><th>Button</th><th>When to choose it</th><th>What happens</th></tr>",
+        "<tr><td><b>Encore</b> (Again)</td><td>I did not know it, or I got it wrong.</td><td>The card comes back in the same session, after a few other cards, often in the other form.</td></tr>",
+        "<tr><td><b>Difficile</b> (Hard)</td><td>I found it, but I hesitated a lot.</td><td>The card comes back soon, with a slightly longer delay than before.</td></tr>",
+        "<tr><td><b>Bien</b> (Good)</td><td>I found it without much difficulty.</td><td>The delay grows normally (for example 1 day, then 3, then 8, then 20 days…).</td></tr>",
+        "<tr><td><b>Facile</b> (Easy)</td><td>It was obvious.</td><td>The delay grows a lot.</td></tr></table>"] },
+      { id: 'arreter', t: '4. Stop a session', h: [
+        "<p>Tap <b>« Terminer »</b> (top right, next to the counter) to stop whenever you want. Your progress is saved after every card: the cards you have not done will be offered again. You can start a new session with « Commencer ».</p>"] },
+      { id: 'clavier', t: '5. Keyboard shortcuts (computer)', h: [
+        "<table><tr><th>Key</th><th>Action</th></tr>",
+        "<tr><td>Space or Enter</td><td>Show the answer</td></tr>",
+        "<tr><td>1, 2, 3, 4</td><td>Rate: Again, Hard, Good, Easy</td></tr>",
+        "<tr><td>R</td><td>Replay the word</td></tr>",
+        "<tr><td>Esc</td><td>Finish the session</td></tr></table>"] },
+      { id: 'reglages', t: '6. Settings (tab « Réglages »)', h: [
+        "<table><tr><th>Setting</th><th>Effect</th></tr>",
+        "<tr><td><b>Paquet de cartes</b> (Card deck)</td><td>Only shown when there is more than one deck. Switching decks reloads the app with the other deck; the progress of each deck is kept separately. The first time you open the app it asks which deck to open; after that it reopens the deck you used last. The deck's name appears in the banner at the top.</td></tr>",
+        "<tr><td><b>Nouvelles cartes par jour</b> (New cards per day)</td><td>The maximum number of new words offered each day (10 by default). Choose fewer if you feel overwhelmed.</td></tr>",
+        "<tr><td><b>Lecture audio automatique</b> (Automatic audio)</td><td>Plays the word as soon as the card appears or the answer is shown.</td></tr>",
+        "<tr><td><b>Suivi des cartes</b> (Card tracking)</td><td>« Un seul suivi par mot » (One tracking per word): a word counts as one review, whatever the type of card. « Suivi séparé par type d'exercice » (Separate tracking per exercise type): listening and definition are scheduled separately; you review about twice as many cards but follow each skill more closely. Changing this asks for confirmation.</td></tr>",
+        "<tr><td><b>Voix et vitesse</b> (Voice and speed)</td><td>Choose the French voice of your device and the reading speed. The « Tester la voix » (Test the voice) button lets you try it.</td></tr></table>"] },
+      { id: 'sauvegarde', t: '7. Back up and move your progress', h: [
+        "<ul><li><b>Exporter</b> (or <b>Exporter ce paquet</b>, Export this deck, when there are several decks): downloads a file with the progress and settings of the open deck.</li>",
+        "<li><b>Exporter tous les paquets</b> (Export all decks, only shown when there are several decks): a single file containing the progress of every deck used on this device.</li>",
+        "<li><b>Importer</b> (Import): reloads an exported file (for example on a new phone), after confirmation. With a backup of all decks, a list of tick boxes lets you restore only some of them.</li>",
+        "<li><b>Réinitialiser</b> (or <b>Réinitialiser ce paquet</b>, Reset this deck): sets your card selection and your review progress back to zero for the open deck; other decks are not affected. The deck's content is not stored on your device, so it is not affected either.</li></ul>",
+        "<div class='notice'><b>Safety.</b> A backup of one deck can only be imported into that same deck. If you pick the file of another deck by mistake, the app refuses it with a message and changes nothing. To restore another deck, open it first (Réglages → Paquet de cartes).</div>",
+        "<p><b>Tip.</b> Export your progress from time to time, and always before changing phone or clearing your browser data.</p>",
+        "<h3>When could my progress disappear?</h3>",
+        "<p>Your progress is saved in your browser, on your device. It does not disappear with a usual system update, but it can be lost in these situations:</p>",
+        "<ul><li><b>A long break on iPhone or iPad:</b> if you do not open Vocalésia for a long time (a week or more of Safari use, for example over the holidays), Safari may delete the site's data. Adding Vocalésia to your home screen reduces this risk.</li>",
+        "<li><b>Cleaning your browser:</b> “clear website data”, a cleaning app or reinstalling the browser deletes everything.</li>",
+        "<li><b>A nearly full phone:</b> the system may free up space by deleting data from rarely used sites.</li>",
+        "<li><b>Another device or another browser:</b> your progress does not follow you; you have to export it and import it.</li>",
+        "<li><b>Private browsing:</b> everything disappears when you close the window.</li></ul>",
+        "<div class='notice'><b>Do this before a long break, a change of phone or a clean-up.</b> Go to Réglages (Settings) and export your progress, then keep the file (in your documents, or email it to yourself). You can import it again if needed.</div>"] },
+      { id: 'conseils', t: '8. Tips for effective memorising', h: [
+        "<ul><li>Review <b>a little every day</b> (5 to 10 minutes) rather than a long time now and then.</li>",
+        "<li>Do not select too many cards at once: add them as the lessons go by.</li>",
+        "<li>Rate yourself honestly: being too generous with « Facile » (Easy) spaces out the reviews too much.</li>",
+        "<li>Do not use private browsing and do not clear the site's data: you would lose your progress.</li></ul>"] },
+      { id: 'problemes', t: '9. If something goes wrong', h: [
+        "<table><tr><th>Problem</th><th>What to do</th></tr>",
+        "<tr><td>I can't hear anything</td><td>Check your phone's volume and that it is not in silent mode. Go to « Réglages » and tap « Tester la voix » (Test the voice).</td></tr>",
+        "<tr><td>The app says no French voice was found</td><td>Install a French voice in your device settings (accessibility or speech), then reload the page.</td></tr>",
+        "<tr><td>I don't see the new cards</td><td>Reload the page. Wait a few minutes if your teacher has just published them.</td></tr>",
+        "<tr><td>My progress has disappeared</td><td>You may be using another browser or device, or the browser data may have been cleared. Import your latest backup (section 7).</td></tr>",
+        "<tr><td>A message says my progress cannot be saved</td><td>You are probably in private browsing. Open the app in a normal tab.</td></tr>",
+        "<tr><td>The page is empty or shows an error</td><td>Tell your teacher: the card file needs to be checked.</td></tr></table>"] }
+    ]
+  }
+};
+
 function demarrer() {
   'use strict';
   if (typeof document === 'undefined') return;
@@ -276,7 +471,44 @@ function demarrer() {
   }
 
   /* ---------------- Navigation ---------------- */
-  var tabs = ['review', 'cards', 'settings'];
+  var tabs = ['review', 'cards', 'settings', 'help'];
+
+  // ----- Aide (français / English) avec sommaire cliquable -----
+  var aideLang = (function () {
+    try { var l = localStorage.getItem('vocalesia.aide.lang'); if (l === 'fr' || l === 'en') return l; } catch (e) {}
+    return 'fr';
+  })();
+  function renderHelp() {
+    var box = $('#view-help'), A = AIDE[aideLang];
+    box.replaceChildren();
+    var wrap = h('div', { class: 'help', lang: aideLang });
+    function go(id) {
+      var el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    function langBtn(l, label) {
+      return h('button', { class: l === aideLang ? 'primary' : 'secondary', type: 'button', lang: l, 'aria-pressed': l === aideLang ? 'true' : 'false',
+        onclick: function () {
+          aideLang = l;
+          try { localStorage.setItem('vocalesia.aide.lang', l); } catch (e) {}
+          renderHelp(); window.scrollTo(0, 0);
+        } }, label);
+    }
+    wrap.append(h('div', { class: 'btnrow', id: 'aide-top' }, langBtn('fr', 'Français'), langBtn('en', 'English')));
+    var intro = h('p', { class: 'intro' }); intro.innerHTML = A.intro; wrap.append(intro);
+    var list = h('ul', { class: 'toc' });
+    A.sections.forEach(function (sec) {
+      list.append(h('li', {}, h('a', { href: '#aide-' + sec.id, onclick: function (e) { e.preventDefault(); go('aide-' + sec.id); } }, sec.t)));
+    });
+    wrap.append(h('div', { class: 'panel' }, h('h2', { style: 'margin-top:0' }, A.sommaire), h('div', { role: 'navigation', 'aria-label': A.sommaire }, list)));
+    A.sections.forEach(function (sec) {
+      var body = h('div'); body.innerHTML = sec.h.join('');
+      wrap.append(h('section', { id: 'aide-' + sec.id }, h('h2', {}, sec.t), body,
+        h('a', { class: 'toplink', href: '#aide-top', onclick: function (e) { e.preventDefault(); go('aide-top'); } }, A.haut)));
+    });
+    box.append(wrap);
+  }
+
   function showTab(name) {
     tabs.forEach(function (t) {
       $('#tab-' + t).setAttribute('aria-selected', t === name ? 'true' : 'false');
@@ -285,6 +517,7 @@ function demarrer() {
     if (name === 'review') renderReview();
     if (name === 'cards') renderCards();
     if (name === 'settings') renderSettings();
+    if (name === 'help') renderHelp();
   }
   tabs.forEach(function (t) { $('#tab-' + t).addEventListener('click', function () { showTab(t); }); });
 
